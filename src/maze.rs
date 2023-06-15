@@ -18,7 +18,8 @@ pub const PATH: [u8; 3] = [255, 255, 255];
 fn get_entrance(image: &RgbImage, nodes: &mut Nodes, top_nodes: &mut [Option<(u32, u32)>]) {
     for (x, y, pixel) in image.enumerate_pixels() {
         if let [255, 255, 255] = pixel.channels() {
-            let node = Node::at(x, y);
+            let mut node = Node::at(x, y);
+            node.start = true;
             nodes.insert((x, y), node);
             top_nodes[x as usize] = Some((x, y));
             break;
@@ -34,6 +35,7 @@ fn get_exit<'a>(image: &RgbImage, nodes: &'a mut Nodes, top_nodes: &'a [Option<(
             let current = (x as u32, last_row);
 
             let mut exit_node = Node::at(current.0, current.1);
+            exit_node.end = true;
             exit_node.children.insert(Direction::North, above);
             nodes.insert(current, exit_node);
 
@@ -166,7 +168,7 @@ impl Maze {
             get_exit(&image, &mut nodes, &top_nodes);
         }
 
-        // dbg!(&nodes);
+        dbg!(&nodes);
 
         Ok(nodes)
     }
