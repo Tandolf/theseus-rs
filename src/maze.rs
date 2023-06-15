@@ -67,15 +67,15 @@ impl Maze {
                     let prev = current;
                     current = next;
                     next = look_ahead(x, y, &image);
-                    println!(
-                        "Point: {:?}, west: {}, ground: {}, east: {}, north: {}, south: {}",
-                        &(x, y),
-                        prev,
-                        current,
-                        next,
-                        path_above(x, y, &image),
-                        path_below(x, y, &image)
-                    );
+                    // println!(
+                    //     "Point: {:?}, west: {}, ground: {}, east: {}, north: {}, south: {}",
+                    //     &(x, y),
+                    //     prev,
+                    //     current,
+                    //     next,
+                    //     path_above(x, y, &image),
+                    //     path_below(x, y, &image)
+                    // );
 
                     let mut n = None;
 
@@ -168,7 +168,7 @@ impl Maze {
             get_exit(&image, &mut nodes, &top_nodes);
         }
 
-        dbg!(&nodes);
+        // dbg!(&nodes);
 
         Ok(nodes)
     }
