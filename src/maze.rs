@@ -2,44 +2,44 @@ use fxhash::FxHashMap;
 use image::{Pixel, RgbImage};
 use std::{io::Error, iter};
 
-use crate::node::{Direction, Node};
+use crate::node::{Direction, Node, NodeType, Point};
 use crate::utils::{look_ahead, path_above, path_below, wall_above, wall_below};
 
 pub struct Maze;
 
-type Nodes = FxHashMap<(u32, u32), Node>;
+pub type Nodes = FxHashMap<NodeType, Node>;
 
 pub const WALL: [u8; 3] = [0, 0, 0];
-pub const PATH: [u8; 3] = [255, 255, 255];
+pub const PATHWAY: [u8; 3] = [255, 255, 255];
 
 // X = columns
 // y = rows
 
-fn get_entrance(image: &RgbImage, nodes: &mut Nodes, top_nodes: &mut [Option<(u32, u32)>]) {
+fn get_entrance(image: &RgbImage, nodes: &mut Nodes, top_nodes: &mut [Option<Point>]) {
     for (x, y, pixel) in image.enumerate_pixels() {
         if let [255, 255, 255] = pixel.channels() {
             let mut node = Node::at(x, y);
             node.start = true;
-            nodes.insert((x, y), node);
-            top_nodes[x as usize] = Some((x, y));
+            nodes.insert(NodeType::Start, node);
+            top_nodes[x as usize] = Some(Point::at(x, y));
             break;
         }
     }
 }
 
-fn get_exit<'a>(image: &RgbImage, nodes: &'a mut Nodes, top_nodes: &'a [Option<(u32, u32)>]) {
+fn get_exit<'a>(image: &RgbImage, nodes: &'a mut Nodes, top_nodes: &'a [Option<Point>]) {
     let last_row = image.height() - 1;
     for (x, pixel) in image.rows().last().unwrap().enumerate() {
-        if pixel.channels() == PATH {
-            let above = top_nodes[x].unwrap();
-            let current = (x as u32, last_row);
+        if pixel.channels() == PATHWAY {
+            let above = top_nodes[x].as_ref().unwrap();
+            let current = Point::at(x as u32, last_row);
 
-            let mut exit_node = Node::at(current.0, current.1);
+            let mut exit_node = Node::from_point(current);
             exit_node.end = true;
-            exit_node.children.insert(Direction::North, above);
-            nodes.insert(current, exit_node);
+            exit_node.children.insert(Direction::North, *above);
+            nodes.insert(NodeType::Exit, exit_node);
 
-            let node_above = nodes.get_mut(&above).unwrap();
+            let node_above = nodes.get_mut(&NodeType::Path(*above)).unwrap();
             node_above.children.insert(Direction::South, current);
             break;
         }
@@ -51,7 +51,7 @@ impl Maze {
         let mut nodes = FxHashMap::default();
 
         let width = &image.width() - 1;
-        let mut top_nodes: Vec<Option<(u32, u32)>> =
+        let mut top_nodes: Vec<Option<Point>> =
             iter::repeat_with(|| None).take(width as usize).collect();
         get_entrance(image, &mut nodes, &mut top_nodes);
 
@@ -82,14 +82,15 @@ impl Maze {
                                 let mut node = Node::at(x, y);
                                 node.children.insert(Direction::West, left_node.unwrap());
 
+                                let left = left_node.unwrap();
                                 nodes
-                                    .get_mut(&left_node.unwrap())
+                                    .get_mut(&NodeType::Path(left))
                                     .unwrap()
                                     .children
-                                    .insert(Direction::East, (x, y));
+                                    .insert(Direction::East, Point::at(x, y));
 
-                                nodes.insert((x, y), node);
-                                left_node = Some((x, y));
+                                nodes.insert(NodeType::Path(node.point), node);
+                                left_node = Some(Point::at(x, y));
                                 n = left_node;
                             }
                         } else {
@@ -98,30 +99,31 @@ impl Maze {
                             let mut node = Node::at(x, y);
                             node.children.insert(Direction::West, left_node.unwrap());
 
+                            let left = left_node.unwrap();
                             nodes
-                                .get_mut(&left_node.unwrap())
+                                .get_mut(&NodeType::Path(left))
                                 .unwrap()
                                 .children
-                                .insert(Direction::East, (x, y));
+                                .insert(Direction::East, Point::at(x, y));
 
-                            nodes.insert((x, y), node);
+                            nodes.insert(NodeType::Path(node.point), node);
                             left_node = None;
-                            n = Some((x, y));
+                            n = Some(Point::at(x, y));
                         }
                     } else if next {
                         // WALL PATH PATH
                         // Create path at start of corridor
                         let node = Node::at(x, y);
-                        nodes.insert((x, y), node);
-                        left_node = Some((x, y));
-                        n = Some((x, y));
+                        nodes.insert(NodeType::Path(node.point), node);
+                        left_node = Some(Point::at(x, y));
+                        n = Some(Point::at(x, y));
                     } else {
                         // WALL PATH WALL
                         // Only create if in a dead end
                         if wall_above(x, y, image) && wall_below(x, y, image) {
                             let node = Node::at(x, y);
-                            nodes.insert((x, y), node);
-                            n = Some((x, y));
+                            nodes.insert(NodeType::Path(node.point), node);
+                            n = Some(Point::at(x, y));
                         }
                     }
 
@@ -129,18 +131,27 @@ impl Maze {
                     if let Some(current_n) = n {
                         // If path above, then there must be a Node to connect to above
                         if path_above(x, y, image) {
-                            let top_node_point = top_nodes[x as usize].unwrap();
-                            nodes
-                                .get_mut(&top_node_point)
-                                .unwrap()
-                                .children
-                                .insert(Direction::South, (x, y));
+                            let top = top_nodes[x as usize].unwrap();
+
+                            // If we dont find a path node it has to be the start node above us
+                            match nodes.get_mut(&NodeType::Path(top)) {
+                                Some(n) => {
+                                    n.children.insert(Direction::South, current_n);
+                                }
+                                None => {
+                                    nodes
+                                        .get_mut(&NodeType::Start)
+                                        .unwrap()
+                                        .children
+                                        .insert(Direction::South, current_n);
+                                }
+                            }
 
                             nodes
-                                .get_mut(&current_n)
+                                .get_mut(&NodeType::Path(Point::at(x, y)))
                                 .unwrap()
                                 .children
-                                .insert(Direction::North, top_node_point);
+                                .insert(Direction::North, top);
                         }
 
                         // If clear below, then this will probably be connectable, so place it in the top row
@@ -185,7 +196,7 @@ mod test {
 
         let maze_tree = Maze::from_image(&img).unwrap();
 
-        let node = &maze_tree[&(1, 0)];
+        let node = &maze_tree[&NodeType::Path(Point::at(1, 0))];
         assert_eq!(&Node::at(1, 0), node)
     }
 
@@ -208,8 +219,11 @@ mod test {
 
         let maze_tree = Maze::from_image(&img).unwrap();
 
-        assert_eq!(&Node::at(1, 0), &maze_tree[&(1, 0)]);
-        assert_eq!(maze_tree.get(&(1, 1)), None);
+        assert_eq!(
+            &Node::at(1, 0),
+            &maze_tree[&NodeType::Path(Point::at(1, 0))]
+        );
+        assert_eq!(maze_tree.get(&NodeType::Path(Point::at(1, 1))), None);
     }
 
     #[test]
@@ -251,13 +265,13 @@ mod test {
         let maze_tree = Maze::from_image(&img).unwrap();
 
         let mut n1 = Node::at(1, 0);
-        n1.children.insert(Direction::South, (1, 1));
+        n1.children.insert(Direction::South, Point::at(1, 1));
 
         let mut n2 = Node::at(1, 1);
-        n2.children.insert(Direction::North, (1, 0));
+        n2.children.insert(Direction::North, Point::at(1, 0));
 
         dbg!(&maze_tree);
-        assert_eq!(&n1, &maze_tree[&(1, 0)]);
-        assert_eq!(&n2, &maze_tree[&(1, 1)]);
+        assert_eq!(&n1, &maze_tree[&NodeType::Path(Point::at(1, 0))]);
+        assert_eq!(&n2, &maze_tree[&NodeType::Path(Point::at(1, 1))]);
     }
 }
