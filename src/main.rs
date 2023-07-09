@@ -15,10 +15,10 @@ mod utils;
 const INSANE_15K: &str = "mazes/perfect15k.png";
 
 fn main() {
+    let start = Instant::now();
     let image: RgbImage = open(INSANE_15K).unwrap().into_rgb8();
 
-    let start = Instant::now();
-    let maze = Maze::from_image(image);
+    let maze = Maze::from_image(&image);
     let duration = start.elapsed();
 
     println!("Number of nodes loaded: {}", maze.unwrap().len());

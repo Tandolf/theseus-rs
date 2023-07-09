@@ -1,13 +1,13 @@
-use std::{collections::HashMap, io::Error, iter};
-
+use fxhash::FxHashMap;
 use image::{Pixel, RgbImage};
+use std::{io::Error, iter};
 
 use crate::node::{Direction, Node};
 use crate::utils::{look_ahead, path_above, path_below, wall_above, wall_below};
 
 pub struct Maze;
 
-type Nodes = HashMap<(u32, u32), Node>;
+type Nodes = FxHashMap<(u32, u32), Node>;
 
 pub const WALL: [u8; 3] = [0, 0, 0];
 pub const PATH: [u8; 3] = [255, 255, 255];
@@ -47,26 +47,26 @@ fn get_exit<'a>(image: &RgbImage, nodes: &'a mut Nodes, top_nodes: &'a [Option<(
 }
 
 impl Maze {
-    pub(crate) fn from_image(image: RgbImage) -> Result<Nodes, Error> {
-        let mut nodes = HashMap::new();
+    pub(crate) fn from_image(image: &RgbImage) -> Result<Nodes, Error> {
+        let mut nodes = FxHashMap::default();
 
         let width = &image.width() - 1;
         let mut top_nodes: Vec<Option<(u32, u32)>> =
             iter::repeat_with(|| None).take(width as usize).collect();
-        get_entrance(&image, &mut nodes, &mut top_nodes);
+        get_entrance(image, &mut nodes, &mut top_nodes);
 
         let (width, height) = image.dimensions();
         if height > 2 {
             for y in 1..height - 1 {
                 let mut current = false;
-                let mut next = look_ahead(0, y, &image);
+                let mut next = look_ahead(0, y, image);
 
                 let mut left_node = None;
 
                 for x in 1..width - 1 {
                     let prev = current;
                     current = next;
-                    next = look_ahead(x, y, &image);
+                    next = look_ahead(x, y, image);
                     // println!(
                     //     "Point: {:?}, west: {}, ground: {}, east: {}, north: {}, south: {}",
                     //     &(x, y),
@@ -88,7 +88,7 @@ impl Maze {
                             // PATH PATH PATH
                             // only create node if path above or below
                             // check above or below
-                            if path_above(x, y, &image) || path_below(x, y, &image) {
+                            if path_above(x, y, image) || path_below(x, y, image) {
                                 let mut node = Node::at(x, y);
                                 node.children.insert(Direction::West, left_node.unwrap());
 
@@ -128,7 +128,7 @@ impl Maze {
                     } else {
                         // WALL PATH WALL
                         // Only create if in a dead end
-                        if wall_above(x, y, &image) && wall_below(x, y, &image) {
+                        if wall_above(x, y, image) && wall_below(x, y, image) {
                             let node = Node::at(x, y);
                             nodes.insert((x, y), node);
                             n = Some((x, y));
@@ -138,7 +138,7 @@ impl Maze {
                     // If we have a node stored we can check if it needs to be connected upwards.
                     if let Some(current_n) = n {
                         // If path above, then there must be a Node to connect to above
-                        if path_above(x, y, &image) {
+                        if path_above(x, y, image) {
                             let top_node_point = top_nodes[x as usize].unwrap();
                             nodes
                                 .get_mut(&top_node_point)
@@ -154,7 +154,7 @@ impl Maze {
                         }
 
                         // If clear below, then this will probably be connectable, so place it in the top row
-                        if path_below(x, y, &image) {
+                        if path_below(x, y, image) {
                             top_nodes[x as usize] = Some(current_n);
                         } else {
                             top_nodes[x as usize] = None;
@@ -165,7 +165,7 @@ impl Maze {
         }
 
         if height > 1 {
-            get_exit(&image, &mut nodes, &top_nodes);
+            get_exit(image, &mut nodes, &top_nodes);
         }
 
         // dbg!(&nodes);
@@ -193,7 +193,7 @@ mod test {
         img.put_pixel(1, 0, PATH);
         img.put_pixel(2, 0, WALL);
 
-        let maze_tree = Maze::from_image(img).unwrap();
+        let maze_tree = Maze::from_image(&img).unwrap();
 
         let node = &maze_tree[&(1, 0)];
         assert_eq!(&Node::at(1, 0), node)
@@ -216,7 +216,7 @@ mod test {
         img.put_pixel(1, 1, WALL);
         img.put_pixel(2, 1, WALL);
 
-        let maze_tree = Maze::from_image(img).unwrap();
+        let maze_tree = Maze::from_image(&img).unwrap();
 
         assert_eq!(&Node::at(1, 0), &maze_tree[&(1, 0)]);
         assert_eq!(maze_tree.get(&(1, 1)), None);
@@ -258,7 +258,7 @@ mod test {
         img.put_pixel(1, 1, PATH);
         img.put_pixel(2, 1, WALL);
 
-        let maze_tree = Maze::from_image(img).unwrap();
+        let maze_tree = Maze::from_image(&img).unwrap();
 
         let mut n1 = Node::at(1, 0);
         n1.children.insert(Direction::South, (1, 1));
