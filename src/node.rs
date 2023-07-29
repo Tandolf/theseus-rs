@@ -40,7 +40,7 @@ impl Point {
     }
 }
 
-#[derive(Debug, Hash, Eq, PartialEq)]
+#[derive(Debug, Hash, Eq, PartialEq, Copy, Clone)]
 pub enum Direction {
     North = 1,
     West = 2,
@@ -80,6 +80,44 @@ impl ops::Add<u32> for Direction {
                 1 => Direction::North,
                 2 => Direction::East,
                 3 => Direction::South,
+                _ => unimplemented!(),
+            },
+        }
+    }
+}
+
+#[allow(clippy::suspicious_arithmetic_impl)]
+impl ops::Sub<u32> for Direction {
+    type Output = Direction;
+    fn sub(self, rhs: u32) -> Direction {
+        let v = rhs % 4;
+        match self {
+            Direction::North => match v {
+                0 => Direction::North,
+                1 => Direction::West,
+                2 => Direction::South,
+                3 => Direction::East,
+                _ => unimplemented!(),
+            },
+            Direction::East => match v {
+                0 => Direction::East,
+                1 => Direction::North,
+                2 => Direction::West,
+                3 => Direction::South,
+                _ => unimplemented!(),
+            },
+            Direction::South => match v {
+                0 => Direction::South,
+                1 => Direction::East,
+                2 => Direction::North,
+                3 => Direction::West,
+                _ => unimplemented!(),
+            },
+            Direction::West => match v {
+                0 => Direction::West,
+                1 => Direction::South,
+                2 => Direction::East,
+                3 => Direction::North,
                 _ => unimplemented!(),
             },
         }

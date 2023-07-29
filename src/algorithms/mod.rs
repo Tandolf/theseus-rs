@@ -9,18 +9,20 @@ pub trait Solver {
     fn solve(maze: &Nodes) -> Option<Solution>;
 }
 
-pub struct Solution {
+#[derive(Debug)]
+pub struct Solution<'a> {
     count: u32,
-    path: VecDeque<Node>,
-    length: u32,
+    path: VecDeque<&'a Node>,
+    pub length: usize,
 }
 
-impl Solution {
-    pub(crate) fn new(count: u32, path: VecDeque<Node>) -> Self {
+impl<'a> Solution<'a> {
+    pub(crate) fn new(count: u32, path: VecDeque<&'a Node>) -> Self {
+        let length = path.len();
         Self {
             count,
             path,
-            length: 0,
+            length,
         }
     }
 }

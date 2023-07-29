@@ -17,20 +17,78 @@ impl Solver for LeftTurn {
         let start = &maze[&Start];
         let child = &start.children[&Direction::South];
         let current = &maze.get(&NodeType::Path(Point::at(child.x, child.y)));
-        let _current = if current.is_none() {
+        let mut current = if current.is_none() {
             return None;
         } else {
             current.unwrap()
         };
 
-        let _path = VecDeque::from([start]);
-        let _heading = Direction::South;
-        let _turn = 1;
-        let _s_point = &maze[&Start].point;
-        let _e_point = &maze[&Exit].point;
+        let mut path = VecDeque::from([start]);
+        let mut heading = Direction::South;
+        let turn = 1;
+        let start = &maze[&Start].point;
+        let end = &maze[&Exit].point;
 
-        let _count = 1;
+        let mut count = 1;
 
-        None
+        let completed = loop {
+            path.push_back(current);
+            count += 1;
+            let coords = &current.point;
+            if coords == start || coords == end {
+                if coords == end {
+                    break true;
+                }
+                break false;
+            }
+            let n = &current.children;
+
+            // if there is a node to the left add that as a path
+            if let Some(point) = n.get(&(heading - turn)) {
+                heading = heading - turn;
+                let node = maze
+                    .get(&NodeType::Path(*point))
+                    .unwrap_or(maze.get(&NodeType::Exit).unwrap());
+                current = node;
+                continue;
+            };
+
+            // if there is a node under us, use that as path
+            if let Some(point) = n.get(&heading) {
+                let node = maze
+                    .get(&NodeType::Path(*point))
+                    .unwrap_or(maze.get(&NodeType::Exit).unwrap());
+                current = node;
+                continue;
+            };
+
+            // if there is a node to the right, use that as path
+            if let Some(point) = n.get(&(heading + turn)) {
+                heading = heading + turn;
+                let node = maze
+                    .get(&NodeType::Path(*point))
+                    .unwrap_or(maze.get(&NodeType::Exit).unwrap());
+                current = node;
+                continue;
+            };
+
+            // last resort, turn back
+            if let Some(point) = n.get(&(heading + (turn * 2))) {
+                heading = heading + (turn * 2);
+                let node = maze
+                    .get(&NodeType::Path(*point))
+                    .unwrap_or(maze.get(&NodeType::Exit).unwrap());
+                current = node;
+                continue;
+            };
+
+            break false;
+        };
+
+        if !completed {
+            return None;
+        }
+
+        Some(Solution::new(count, path))
     }
 }

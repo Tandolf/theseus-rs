@@ -48,7 +48,9 @@ fn get_exit<'a>(image: &RgbImage, nodes: &'a mut Nodes, top_nodes: &'a [Option<P
 
 impl Maze {
     pub(crate) fn from_image(image: &RgbImage) -> Result<Nodes, Error> {
-        let mut nodes = FxHashMap::default();
+        let len = image.pixels().len();
+        dbg!(len);
+        let mut nodes = FxHashMap::with_capacity_and_hasher(len / 6, Default::default());
 
         let width = &image.width() - 1;
         let mut top_nodes: Vec<Option<Point>> =
