@@ -11,8 +11,8 @@ pub trait Solver {
 
 #[derive(Debug)]
 pub struct Solution<'a> {
-    count: u32,
-    path: VecDeque<&'a Node>,
+    pub count: u32,
+    pub path: VecDeque<&'a Node>,
     pub length: usize,
 }
 
