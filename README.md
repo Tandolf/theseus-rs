@@ -5,4 +5,4 @@ labyrinth with the aid of Ariadne, the daughter of Minos.__
 
 This is a small program that maps up labyrinths and then attempts to solve them using different algorithms.
 
-![Solved maze](images/solution.png) w
+![Solved maze](images/maze_solution.png) w
