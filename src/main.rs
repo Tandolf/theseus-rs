@@ -29,7 +29,7 @@ fn main() {
     let maze = maze.unwrap();
     let mut solution = LeftTurn::solve(&maze).unwrap();
 
-    println!("Number of nodes loaded: {}", maze.len());
+    println!("Number of nodes loaded: {}", maze.data.len());
     println!("Loading maze: {INSANE_15K} took: {:?}", duration);
     dbg!(solution.length);
 

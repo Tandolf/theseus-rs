@@ -5,7 +5,11 @@ use std::{io::Error, iter};
 use crate::node::{Direction, Node, NodeType, Point};
 use crate::utils::{look_ahead, path_above, path_below, wall_above, wall_below};
 
-pub struct Maze;
+pub struct Maze {
+    pub width: u32,
+    pub height: u32,
+    pub data: Nodes,
+}
 
 pub type Nodes = FxHashMap<NodeType, Node>;
 
@@ -47,9 +51,8 @@ fn get_exit<'a>(image: &RgbImage, nodes: &'a mut Nodes, top_nodes: &'a [Option<P
 }
 
 impl Maze {
-    pub(crate) fn from_image(image: &RgbImage) -> Result<Nodes, Error> {
+    pub(crate) fn from_image(image: &RgbImage) -> Result<Maze, Error> {
         let len = image.pixels().len();
-        dbg!(len);
         let mut nodes = FxHashMap::with_capacity_and_hasher(len / 6, Default::default());
 
         let width = &image.width() - 1;
@@ -173,7 +176,11 @@ impl Maze {
 
         // dbg!(&nodes);
 
-        Ok(nodes)
+        Ok(Maze {
+            width: image.width(),
+            height: image.height(),
+            data: nodes,
+        })
     }
 }
 

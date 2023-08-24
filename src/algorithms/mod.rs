@@ -1,12 +1,13 @@
 use std::collections::VecDeque;
 
-use crate::maze::Nodes;
+use crate::maze::Maze;
 use crate::node::Node;
 
+pub mod djikstra;
 pub mod left_turn;
 
 pub trait Solver {
-    fn solve(maze: &Nodes) -> Option<Solution>;
+    fn solve(maze: &Maze) -> Option<Solution>;
 }
 
 #[derive(Debug)]

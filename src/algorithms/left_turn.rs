@@ -1,7 +1,7 @@
 use std::collections::VecDeque;
 
 use crate::algorithms::{Solution, Solver};
-use crate::maze::Nodes;
+use crate::maze::Maze;
 use crate::node::NodeType::{Exit, Start};
 use crate::node::{Direction, NodeType, Point};
 
@@ -9,7 +9,8 @@ use crate::node::{Direction, NodeType, Point};
 pub struct LeftTurn;
 
 impl Solver for LeftTurn {
-    fn solve(maze: &Nodes) -> Option<Solution> {
+    fn solve(maze: &Maze) -> Option<Solution> {
+        let maze = &maze.data;
         if !maze.contains_key(&Start) {
             return None;
         }
