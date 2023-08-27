@@ -28,7 +28,7 @@ impl Node {
     }
 }
 
-#[derive(Debug, Default, Hash, Eq, PartialEq, Copy, Clone)]
+#[derive(Debug, Default, Hash, Eq, PartialEq, Copy, Clone, PartialOrd, Ord)]
 pub struct Point {
     pub x: u32,
     pub y: u32,
