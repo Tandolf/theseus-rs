@@ -5,7 +5,7 @@ use image::{open, Rgb, RgbImage};
 use maze::Maze;
 use node::Point;
 
-use crate::algorithms::left_turn::LeftTurn;
+use crate::algorithms::{djikstra::Dijkstra, left_turn::LeftTurn};
 
 mod algorithms;
 mod maze;
@@ -24,14 +24,19 @@ fn main() {
     let mut image: RgbImage = open(MEDIUM).unwrap().into_rgb8();
 
     let maze = Maze::from_image(&image);
-    let duration = start.elapsed();
+    let load_duration = start.elapsed();
 
     let maze = maze.unwrap();
+    let solution_time = Instant::now();
     let mut solution = LeftTurn::solve(&maze).unwrap();
     // let mut solution = Dijkstra::solve(&maze).unwrap();
 
+    let solution_time = solution_time.elapsed();
+
     println!("Number of nodes loaded: {}", maze.data.len());
-    println!("Loading maze: {MEDIUM} took: {:?}", duration);
+    println!("Loading maze: {MEDIUM} took: {:?}", load_duration);
+    println!("Solving took: {MEDIUM} took: {:?}", solution_time);
+    println!("Number of decisions: {:?}", solution.count);
 
     let mut last = solution.path.pop_front().unwrap();
     for n in solution.path {
