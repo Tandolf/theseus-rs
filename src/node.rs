@@ -35,15 +35,6 @@ impl Node {
             children: HashMap::new(),
         }
     }
-
-    pub(crate) fn from_point(point: Point) -> Self {
-        Self {
-            start: false,
-            end: false,
-            point,
-            children: HashMap::new(),
-        }
-    }
 }
 
 #[derive(Debug, Default, Hash, Eq, PartialEq, Copy, Clone, PartialOrd, Ord)]
