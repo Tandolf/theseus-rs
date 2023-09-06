@@ -39,7 +39,7 @@ impl Solver for Dijkstra {
         let start_point = start.point;
 
         let end = &maze[&Exit];
-        let end_point = end.point;
+        let _end_point = end.point;
 
         let start_index = (start_point.y * width) + start_point.x;
 
@@ -52,7 +52,7 @@ impl Solver for Dijkstra {
 
         unvisited.push(state);
 
-        while let Some(Node { cost, position }) = unvisited.pop() {
+        while let Some(Node { cost: _, position }) = unvisited.pop() {
             let parent_index = (position.y * width) + position.x;
 
             let node = maze
