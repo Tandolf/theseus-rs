@@ -5,6 +5,7 @@ use std::{io::Error, iter};
 use crate::node::{Direction, Node, NodeType, Point};
 use crate::utils::{look_ahead, path_above, path_below, wall_above, wall_below};
 
+#[derive(Debug)]
 pub struct Maze {
     pub width: u32,
     pub height: u32,
@@ -22,8 +23,7 @@ pub const PATHWAY: [u8; 3] = [255, 255, 255];
 fn get_entrance(image: &RgbImage, nodes: &mut Nodes, top_nodes: &mut [Option<Point>]) {
     for (x, y, pixel) in image.enumerate_pixels() {
         if let [255, 255, 255] = pixel.channels() {
-            let mut node = Node::at(x, y);
-            node.start = true;
+            let node = Node::start(x, y);
             nodes.insert(NodeType::Start, node);
             top_nodes[x as usize] = Some(Point::at(x, y));
             break;
@@ -43,8 +43,15 @@ fn get_exit<'a>(image: &RgbImage, nodes: &'a mut Nodes, top_nodes: &'a [Option<P
             exit_node.children.insert(Direction::North, *above);
             nodes.insert(NodeType::Exit, exit_node);
 
-            let node_above = nodes.get_mut(&NodeType::Path(*above)).unwrap();
-            node_above.children.insert(Direction::South, current);
+            match nodes.get_mut(&NodeType::Path(*above)) {
+                Some(node_above) => {
+                    node_above.children.insert(Direction::South, current);
+                }
+                None => {
+                    let node_above = nodes.get_mut(&NodeType::Start).unwrap();
+                    node_above.children.insert(Direction::South, current);
+                }
+            }
             break;
         }
     }
@@ -61,6 +68,14 @@ impl Maze {
         get_entrance(image, &mut nodes, &mut top_nodes);
 
         let (width, height) = image.dimensions();
+        if height == 1 && nodes.len() == 1 {
+            return Ok(Maze {
+                width,
+                height,
+                data: nodes,
+            });
+        }
+        dbg!(height);
         if height > 2 {
             for y in 1..height - 1 {
                 let mut current = false;
@@ -136,6 +151,7 @@ impl Maze {
                     if let Some(current_n) = n {
                         // If path above, then there must be a Node to connect to above
                         if path_above(x, y, image) {
+                            dbg!(x, &top_nodes);
                             let top = top_nodes[x as usize].unwrap();
 
                             // If we dont find a path node it has to be the start node above us
@@ -184,101 +200,99 @@ impl Maze {
     }
 }
 
-// // #[cfg(test)]
-// mod test {
+macro_rules! maze_image {
+    ($num:expr) => {{
+        let mut img = RgbImage::new($num[0].len() as u32, $num.len() as u32);
+        for (y, row) in $num.iter().enumerate() {
+            for (x, item) in row.iter().enumerate() {
+                // if path
+                if *item == 1 {
+                    img.put_pixel(x as u32, y as u32, PATH);
+                // if wall
+                } else {
+                    img.put_pixel(x as u32, y as u32, WALL);
+                }
+            }
+        }
+        img
+    }};
+}
 
-//     use image::Rgb;
+#[cfg(test)]
+mod test {
 
-//     use super::*;
+    use super::*;
+    use image::Rgb;
 
-//     const WALL: Rgb<u8> = Rgb([0, 0, 0]);
-//     const PATH: Rgb<u8> = Rgb([255, 255, 255]);
+    const WALL: Rgb<u8> = Rgb([0, 0, 0]);
+    const PATH: Rgb<u8> = Rgb([255, 255, 255]);
 
-//     // first maze row
-//     // xox
-//     // #[test]
-//     fn entrance() {
-//         let mut img = RgbImage::new(3, 1);
-//         img.put_pixel(0, 0, WALL);
-//         img.put_pixel(1, 0, PATH);
-//         img.put_pixel(2, 0, WALL);
+    //     // first maze row
+    //     // xox
+    #[test]
+    fn entrance() {
+        let img = maze_image!([[0, 1, 0]]);
+        let maze_tree = Maze::from_image(&img).unwrap();
 
-//         let maze_tree = Maze::from_image(&img).unwrap();
+        let node = &maze_tree.data[&NodeType::Start];
+        assert_eq!(&Node::start(1, 0), node)
+    }
 
-//         let node = &maze_tree[&NodeType::Path(Point::at(1, 0))];
-//         assert_eq!(&Node::at(1, 0), node)
-//     }
+    // two maze rows, second only walls
+    // xox
+    // xxx
+    #[test]
+    fn entry_and_exit() {
+        #[rustfmt::skip]
+        let img = maze_image!([
+            [0, 1, 0], 
+            [0, 1, 0]
+        ]);
 
-//     // two maze rows, second only walls
-//     // xox
-//     // xxx
-//     // #[test]
-//     fn only_wall() {
-//         let mut img = RgbImage::new(3, 2);
+        let maze_tree = Maze::from_image(&img).unwrap();
 
-//         // first row
-//         img.put_pixel(0, 0, WALL);
-//         img.put_pixel(1, 0, PATH);
-//         img.put_pixel(2, 0, WALL);
+        let mut start = Node::start(1, 0);
+        start.children.insert(Direction::South, Point::at(1, 1));
 
-//         // second row
-//         img.put_pixel(0, 1, WALL);
-//         img.put_pixel(1, 1, WALL);
-//         img.put_pixel(2, 1, WALL);
+        let mut exit = Node::exit(1, 1);
+        exit.children.insert(Direction::North, Point::at(1, 0));
 
-//         let maze_tree = Maze::from_image(&img).unwrap();
+        assert_eq!(&start, &maze_tree.data[&NodeType::Start]);
+        assert_eq!(&exit, &maze_tree.data[&NodeType::Exit]);
+    }
 
-//         assert_eq!(
-//             &Node::at(1, 0),
-//             &maze_tree[&NodeType::Path(Point::at(1, 0))]
-//         );
-//         assert_eq!(maze_tree.get(&NodeType::Path(Point::at(1, 1))), None);
-//     }
+    // two maze rows, one middle path
+    // xox
+    // xox
+    // xox
+    #[test]
+    fn first_corridor() {
+        #[rustfmt::skip]
+        let img = maze_image!([
+            [0, 1, 0],
+            [0, 1, 0],
+            [0, 1, 0]
+        ]);
 
-//     // #[test]
-//     fn is_wall() {
-//         let mut img = RgbImage::new(2, 1);
-//         // first row
-//         img.put_pixel(0, 0, WALL);
-//         img.put_pixel(1, 0, PATH);
+        let maze_tree = Maze::from_image(&img).unwrap();
 
-//         let a1 = look_ahead(0, 0, &img);
-//         let a2 = look_ahead(1, 0, &img);
-//         assert!(!a1);
-//         assert!(a2);
-//     }
+        let mut n1 = Node::start(1, 0);
+        n1.children.insert(Direction::South, Point::at(1, 2));
 
-//     // two maze rows, one middle path
-//     // xox
-//     // xox
-//     // xox
-//     // #[test]
-//     fn first_corridor() {
-//         let mut img = RgbImage::new(3, 2);
+        let mut n2 = Node::exit(1, 2);
+        n2.children.insert(Direction::North, Point::at(1, 0));
 
-//         // first row
-//         img.put_pixel(0, 0, WALL);
-//         img.put_pixel(1, 0, PATH);
-//         img.put_pixel(2, 0, WALL);
-//         // second row
-//         img.put_pixel(0, 1, WALL);
-//         img.put_pixel(1, 1, PATH);
-//         img.put_pixel(2, 1, WALL);
+        assert_eq!(&n1, maze_tree.data.get(&NodeType::Start).unwrap());
+        assert_eq!(&n2, maze_tree.data.get(&NodeType::Exit).unwrap());
+    }
 
-//         // third row
-//         img.put_pixel(0, 1, WALL);
-//         img.put_pixel(1, 1, PATH);
-//         img.put_pixel(2, 1, WALL);
-
-//         let maze_tree = Maze::from_image(&img).unwrap();
-
-//         let mut n1 = Node::at(1, 0);
-//         n1.children.insert(Direction::South, Point::at(1, 1));
-
-//         let mut n2 = Node::at(1, 1);
-//         n2.children.insert(Direction::North, Point::at(1, 0));
-
-//         assert_eq!(&n1, &maze_tree[&NodeType::Path(Point::at(1, 0))]);
-//         assert_eq!(&n2, &maze_tree[&NodeType::Path(Point::at(1, 1))]);
-//     }
-// }
+    #[test]
+    fn side_path() {
+        #[rustfmt::skip]
+        let img = maze_image!([
+            [0, 1, 0, 0],
+            [0, 1, 1, 0],
+            [0, 1, 0, 0]
+        ]);
+    }
+}

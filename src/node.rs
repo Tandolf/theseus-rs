@@ -18,6 +18,24 @@ impl Node {
         }
     }
 
+    pub(crate) fn start(x: u32, y: u32) -> Self {
+        Self {
+            start: true,
+            end: false,
+            point: Point::at(x, y),
+            children: HashMap::new(),
+        }
+    }
+
+    pub(crate) fn exit(x: u32, y: u32) -> Self {
+        Self {
+            start: false,
+            end: true,
+            point: Point::at(x, y),
+            children: HashMap::new(),
+        }
+    }
+
     pub(crate) fn from_point(point: Point) -> Self {
         Self {
             start: false,

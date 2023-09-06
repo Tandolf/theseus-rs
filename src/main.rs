@@ -13,15 +13,15 @@ mod node;
 mod utils;
 
 // const TINY: &str = "mazes/tiny5x5.bmp";
-// const MEDIUM: &str = "mazes/maze7x7_1.bmp";
+const MEDIUM: &str = "mazes/maze7x7_1.bmp";
 // const LARGE: &str = "mazes/maze13x13_1.bmp";
-const INSANE: &str = "mazes/maze99x99_1.bmp";
+// const INSANE: &str = "mazes/maze99x99_1.bmp";
 // const INSANE_10K: &str = "mazes/perfect10k.png";
 // const INSANE_15K: &str = "mazes/perfect15k.png";
 
 fn main() {
     let start = Instant::now();
-    let mut image: RgbImage = open(INSANE).unwrap().into_rgb8();
+    let mut image: RgbImage = open(MEDIUM).unwrap().into_rgb8();
 
     let maze = Maze::from_image(&image);
     let duration = start.elapsed();
@@ -31,7 +31,7 @@ fn main() {
     // let mut solution = Dijkstra::solve(&maze).unwrap();
 
     println!("Number of nodes loaded: {}", maze.data.len());
-    println!("Loading maze: {INSANE} took: {:?}", duration);
+    println!("Loading maze: {MEDIUM} took: {:?}", duration);
 
     let mut last = solution.path.pop_front().unwrap();
     for n in solution.path {

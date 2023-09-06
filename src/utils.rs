@@ -25,7 +25,7 @@ pub fn wall_above(x: u32, y: u32, image: &RgbImage) -> bool {
 }
 
 pub fn wall_below(x: u32, y: u32, image: &RgbImage) -> bool {
-    is_wall(x, y - 1, image)
+    is_wall(x, y + 1, image)
 }
 
 pub fn is_wall(x: u32, y: u32, image: &RgbImage) -> bool {
