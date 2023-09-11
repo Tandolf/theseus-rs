@@ -1,6 +1,6 @@
 use std::{collections::HashMap, ops};
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Clone)]
 pub struct Node {
     pub start: bool,
     pub end: bool,

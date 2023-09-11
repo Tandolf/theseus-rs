@@ -1,11 +1,11 @@
-use std::time::Instant;
+use std::{env, time::Instant};
 
 use algorithms::Solver;
 use image::{open, Rgb, RgbImage};
 use maze::Maze;
 use node::Point;
 
-use crate::algorithms::{djikstra::Dijkstra, left_turn::LeftTurn};
+use crate::algorithms::djikstra::Dijkstra;
 
 mod algorithms;
 mod maze;
@@ -20,6 +20,7 @@ const MEDIUM: &str = "mazes/maze7x7_1.bmp";
 // const INSANE_15K: &str = "mazes/perfect15k.png";
 
 fn main() {
+    env::set_var("RUST_BACKTRACE", "1");
     let start = Instant::now();
     let mut image: RgbImage = open(MEDIUM).unwrap().into_rgb8();
 
@@ -28,8 +29,8 @@ fn main() {
 
     let maze = maze.unwrap();
     let solution_time = Instant::now();
-    let mut solution = LeftTurn::solve(&maze).unwrap();
-    // let mut solution = Dijkstra::solve(&maze).unwrap();
+    // let mut solution = LeftTurn::solve(&maze).unwrap();
+    let mut solution = Dijkstra::solve(&maze).unwrap();
 
     let solution_time = solution_time.elapsed();
 
