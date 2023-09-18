@@ -5,7 +5,7 @@ use crate::node::{
     NodeType::{self, Exit, Start},
     Point,
 };
-use std::collections::{BinaryHeap, VecDeque};
+use std::{collections::{BinaryHeap, VecDeque}, cell::Cell};
 
 use crate::{
     algorithms::{Solution, Solver},
@@ -16,11 +16,12 @@ use crate::{
 struct BinNode {
     pub cost: u32,
     pub position: Point,
+    is_valid: Cell<bool>,
 }
 
 impl BinNode {
     pub fn new(cost: u32, position: Point) -> Self {
-        BinNode { cost, position }
+        BinNode { cost, position, is_valid: Cell::new(true)}
     }
 }
 
@@ -54,7 +55,6 @@ impl Solver for Dijkstra {
 
         let start = &maze[&Start];
         let end = &maze[&Exit];
-        // let _end_point = end.point;
 
         let start_index = (start.point.y * width) + start.point.x;
 
@@ -64,7 +64,10 @@ impl Solver for Dijkstra {
         let mut unvisited = BinaryHeap::new();
         unvisited.push(BinNode::new(0, start.point));
 
-        while let Some(BinNode { cost: _, position }) = unvisited.pop() {
+        while let Some(BinNode { cost: _, position, is_valid }) = unvisited.pop() {
+            if !is_valid.take() {
+                continue;
+            }
             let c_index = (position.y * width) + position.x;
 
             let node = maze
@@ -88,43 +91,60 @@ impl Solver for Dijkstra {
                         let vnode = BinNode::new(new_distance, *next_point);
                         unvisited.push(vnode);
                         distances[n_index as usize] = new_distance;
-                        reverse_path.insert(n_index as usize, Some(node.clone()));
+                        reverse_path[n_index as usize] = Some(node.clone());
+                    } else {
+                        let mut current_cost = u32::MAX;
+                        for n in unvisited.iter() {
+                            if n.position == *next_point {
+                                n.is_valid.set(false);
+                                current_cost = n.cost;
+                                break;
+                            }
+                        };
+                        let n = BinNode::new(current_cost + new_distance, position);
+                        unvisited.push(n);
+                        distances[n_index as usize] = current_cost + new_distance;
                     }
                 }
             }
             visited[c_index as usize] = true;
         }
 
-        for d in 0..total {
-            if d % width == 0 {
-                println!();
-            }
-            if distances[d as usize] == u32::MAX {
-                print!("{n:>3}", n = "");
-            } else {
-                print!("{n:>3}", n = distances[d as usize]);
-            }
-            print!("  ");
-        }
+        // for d in 0..total {
+        //     if d % width == 0 {
+        //         println!();
+        //     }
+        //     if distances[d as usize] == u32::MAX {
+        //         print!("{n:>3}", n = "");
+        //     } else {
+        //         print!("{n:>3}", n = distances[d as usize]);
+        //     }
+        //     print!("  ");
+        // }
 
         let mut solution = VecDeque::new();
         let mut current = Some(end);
 
-        dbg!(&reverse_path);
+        // dbg!(&reverse_path);
 
         while current.is_some() {
             let c = current.unwrap();
-            let n = maze
-                .get(&NodeType::Path(c.point))
-                .unwrap_or(maze.get(&NodeType::Start).unwrap());
+            let n = if let Some(n) = maze.get(&NodeType::Path(c.point)) {
+                n
+            } else if c.start {
+                maze.get(&NodeType::Start).unwrap()
+            } else {
+                maze.get(&NodeType::Exit).unwrap()
+            };
             solution.push_back(n);
+            let index = (c.point.y * width) + c.point.x;
             current = reverse_path
-                .get(((c.point.y * width) + c.point.x) as usize)
+                .get(index as usize)
                 .unwrap()
                 .as_ref();
         }
 
-        dbg!(&solution);
+        // dbg!(&solution);
 
         Some(Solution {
             count: 0,
