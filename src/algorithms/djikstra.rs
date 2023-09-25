@@ -42,19 +42,20 @@ impl PartialOrd for BinNode {
 
 impl Solver for Dijkstra {
     fn solve(maze: &Maze) -> Option<Solution> {
+
+        let mut decisions = 0;
+
         let width = maze.width;
         let total = maze.height * maze.width;
 
         let mut visited: Vec<bool> = (0..total).map(|_| false).collect();
-        let mut reverse_path: Vec<Option<Node>> = (0..total).map(|_| None).collect();
+        let mut reverse_path: Vec<Option<&Node>> = (0..total).map(|_| None).collect();
 
-        let maze = &maze.data;
-        if !maze.contains_key(&Start) {
+        if !maze.data.contains_key(&Start) {
             return None;
         }
 
-        let start = &maze[&Start];
-        let end = &maze[&Exit];
+        let start = &maze.data[&Start];
 
         let start_index = (start.point.y * width) + start.point.x;
 
@@ -65,14 +66,19 @@ impl Solver for Dijkstra {
         unvisited.push(BinNode::new(0, start.point));
 
         while let Some(BinNode { cost: _, position, is_valid }) = unvisited.pop() {
+
+            decisions += 1;
+
             if !is_valid.take() {
                 continue;
             }
-            let c_index = (position.y * width) + position.x;
 
-            let node = maze
+            let node = maze.data
                 .get(&NodeType::Path(position))
-                .unwrap_or(maze.get(&NodeType::Start).unwrap());
+                .or(maze.data.get(&NodeType::Start))
+                .unwrap();
+
+            let c_index = (position.y * width) + position.x;
 
             // Iterate through each conneting child node
             for (_, next_point) in node.children.iter() {
@@ -84,71 +90,45 @@ impl Solver for Dijkstra {
                     let abs_distance = get_dist(&position, next_point);
 
                     // Get the current nodes current distance and add on the new distance
-                    let new_distance = distances[c_index as usize] + abs_distance;
+                    let mut new_distance = distances[c_index as usize] + abs_distance;
 
                     // if this new distance is the shortest path
                     if new_distance < distances[n_index as usize] {
-                        let vnode = BinNode::new(new_distance, *next_point);
-                        unvisited.push(vnode);
-                        distances[n_index as usize] = new_distance;
-                        reverse_path[n_index as usize] = Some(node.clone());
+                        reverse_path[n_index as usize] = Some(node);
                     } else {
-                        let mut current_cost = u32::MAX;
-                        for n in unvisited.iter() {
-                            if n.position == *next_point {
-                                n.is_valid.set(false);
-                                current_cost = n.cost;
-                                break;
-                            }
-                        };
-                        let n = BinNode::new(current_cost + new_distance, position);
-                        unvisited.push(n);
-                        distances[n_index as usize] = current_cost + new_distance;
+                        let node = unvisited.iter().find(|n| &n.position == next_point).unwrap();
+                        node.is_valid.set(false);
+                        new_distance += node.cost;
                     }
+                    let node = BinNode::new(new_distance, *next_point);
+                    unvisited.push(node);
+                    distances[n_index as usize] = new_distance;
                 }
             }
+
             visited[c_index as usize] = true;
         }
 
-        // for d in 0..total {
-        //     if d % width == 0 {
-        //         println!();
-        //     }
-        //     if distances[d as usize] == u32::MAX {
-        //         print!("{n:>3}", n = "");
-        //     } else {
-        //         print!("{n:>3}", n = distances[d as usize]);
-        //     }
-        //     print!("  ");
-        // }
-
+        let end = &maze.data[&Exit];
+        let mut current = Some(&end);
         let mut solution = VecDeque::new();
-        let mut current = Some(end);
-
-        // dbg!(&reverse_path);
 
         while current.is_some() {
-            let c = current.unwrap();
-            let n = if let Some(n) = maze.get(&NodeType::Path(c.point)) {
-                n
-            } else if c.start {
-                maze.get(&NodeType::Start).unwrap()
-            } else {
-                maze.get(&NodeType::Exit).unwrap()
-            };
-            solution.push_back(n);
-            let index = (c.point.y * width) + c.point.x;
+            let node = current.unwrap();
+            let node = get_node(node, maze).unwrap();
+
+            solution.push_back(node);
+
+            let index = (node.point.y * width) + node.point.x;
             current = reverse_path
                 .get(index as usize)
                 .unwrap()
                 .as_ref();
         }
 
-        // dbg!(&solution);
-
         Some(Solution {
-            count: 0,
-            length: 0,
+            count: decisions,
+            length: solution.len(),
             path: solution,
         })
     }
@@ -158,9 +138,57 @@ fn get_dist(current: &Point, next: &Point) -> u32 {
     ((next.y as i32 - current.y as i32).abs() + (next.x as i32 - current.x as i32).abs()) as u32
 }
 
+fn get_node<'a>(node: &'a Node, maze: &'a Maze) -> Option<&'a Node> {
+    maze.data.get(&NodeType::Path(node.point))
+        .or_else(|| {
+            if node.start {
+                maze.data.get(&NodeType::Start)
+            } else {
+                maze.data.get(&NodeType::Exit)
+            }
+        })
+}
+
 #[cfg(test)]
 mod test {
+
     use super::*;
+    use image::Rgb;
+    use image::RgbImage;
+    use pretty_assertions::assert_eq;
+
+    const WALL: Rgb<u8> = Rgb([0, 0, 0]);
+    const PATH: Rgb<u8> = Rgb([255, 255, 255]);
+
+    macro_rules! maze_image {
+        ($num:expr) => {{
+            let mut img = RgbImage::new($num[0].len() as u32, $num.len() as u32);
+            for (y, row) in $num.iter().enumerate() {
+                for (x, item) in row.iter().enumerate() {
+                    // if path
+                    if *item == 1 {
+                        img.put_pixel(x as u32, y as u32, PATH);
+                    // if wall
+                    } else {
+                        img.put_pixel(x as u32, y as u32, WALL);
+                    }
+                }
+            }
+            img
+        }};
+    }
+
+    fn create_path<'a>(coords: &'a [(u32, u32)], maze: &'a Maze) -> VecDeque<&'a Node> {
+        let mut path = VecDeque::new();
+        if let Some(node) = maze.data.get(&NodeType::Start) { path.push_front(node); }
+
+        for coord in coords.iter() {
+            path.push_front(maze.data.get(&NodeType::Path(Point::at(coord.0, coord.1))).unwrap());
+        }
+            
+        path.push_front(maze.data.get(&NodeType::Exit).unwrap());
+        path 
+    }
 
     #[test]
     fn man_dist() {
@@ -169,5 +197,74 @@ mod test {
 
         let d = get_dist(&Point::at(3, 1), &Point::at(1, 1));
         assert_eq!(2, d);
+    }
+
+    #[test]
+    fn simple_maze() {
+        let img = maze_image!([
+            [0, 1, 0, 0, 0],
+            [0, 1, 0, 1, 0],
+            [0, 1, 1, 1, 0],
+            [0, 1, 0, 0, 0],
+            [0, 1, 0, 0, 0]
+        ]);
+
+        let maze = Maze::from_image(&img).unwrap();
+        let solution = Dijkstra::solve(&maze).unwrap();
+        let path = create_path(&[(1,2)], &maze);
+        assert_eq!(path, solution.path)
+    }
+
+    #[test]
+    fn maze_with_loop() {
+        let img = maze_image!([
+            [0, 1, 0, 0, 0],
+            [0, 1, 1, 1, 0],
+            [0, 1, 0, 1, 0],
+            [0, 1, 1, 1, 0],
+            [0, 1, 0, 0, 0]
+        ]);
+
+        let maze = Maze::from_image(&img).unwrap();
+        let solution = Dijkstra::solve(&maze).unwrap();
+        let path = create_path(&[(1,1), (1,3)], &maze);
+        assert_eq!(path, solution.path)
+    }
+
+    #[test]
+    fn maze_with_loop_opposite_exit() {
+        let img = maze_image!([
+            [0, 1, 0, 0, 0],
+            [0, 1, 1, 1, 0],
+            [0, 1, 0, 1, 0],
+            [0, 1, 1, 1, 0],
+            [0, 0, 0, 1, 0]
+        ]);
+
+        let maze = Maze::from_image(&img).unwrap();
+        let solution = Dijkstra::solve(&maze).unwrap();
+        let path = create_path(&[(1,1), (1,3), (3, 3)], &maze);
+        assert_eq!(path, solution.path)
+    }
+
+    #[test]
+    fn maze_walking_away() {
+        let img = maze_image!([
+            [0, 0, 0, 0, 0, 1, 0],
+            [0, 1, 1, 1, 0, 1, 0],
+            [0, 1, 0, 1, 0, 1, 0],
+            [0, 1, 0, 1, 1, 1, 0],
+            [0, 1, 0, 0, 0, 0, 0]
+        ]);
+
+        let maze = Maze::from_image(&img).unwrap();
+        let solution = Dijkstra::solve(&maze).unwrap();
+        let path = create_path(&[
+            (5,3), 
+            (3,3), 
+            (3,1), 
+            (1,1)
+        ], &maze);
+        assert_eq!(path, solution.path)
     }
 }

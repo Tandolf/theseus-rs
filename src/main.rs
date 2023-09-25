@@ -13,30 +13,30 @@ mod node;
 mod utils;
 
 // const TINY: &str = "mazes/tiny5x5.bmp";
-const MEDIUM: &str = "mazes/maze7x7_1.bmp";
+// const MEDIUM: &str = "mazes/maze7x7_1.bmp";
 // const LARGE: &str = "mazes/maze13x13_1.bmp";
 // const INSANE: &str = "mazes/maze99x99_1.bmp";
 // const INSANE_10K: &str = "mazes/perfect10k.png";
-// const INSANE_15K: &str = "mazes/perfect15k.png";
+const INSANE_15K: &str = "mazes/perfect15k.png";
 
 fn main() {
     env::set_var("RUST_BACKTRACE", "1");
     let start = Instant::now();
-    let mut image: RgbImage = open(MEDIUM).unwrap().into_rgb8();
+    let mut image: RgbImage = open(INSANE_15K).unwrap().into_rgb8();
 
     let maze = Maze::from_image(&image);
     let load_duration = start.elapsed();
-
     let maze = maze.unwrap();
+     
+    println!("Loading maze: {INSANE_15K} took: {:?}", load_duration);
+    println!("Number of nodes loaded: {}", maze.data.len());
+
     let solution_time = Instant::now();
     // let mut solution = LeftTurn::solve(&maze).unwrap();
     let mut solution = Dijkstra::solve(&maze).unwrap();
-
     let solution_time = solution_time.elapsed();
 
-    println!("Number of nodes loaded: {}", maze.data.len());
-    println!("Loading maze: {MEDIUM} took: {:?}", load_duration);
-    println!("Solving took: {MEDIUM} took: {:?}", solution_time);
+    println!("Solving took: {INSANE_15K} took: {:?}", solution_time);
     println!("Number of decisions: {:?}", solution.count);
 
     let mut last = solution.path.pop_front().unwrap();
