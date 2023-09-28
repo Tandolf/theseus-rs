@@ -1,11 +1,10 @@
 use std::{env, time::Instant};
 
-use algorithms::Solver;
 use image::{open, Rgb, RgbImage};
 use maze::Maze;
 use node::Point;
 
-use crate::algorithms::djikstra::Dijkstra;
+use crate::algorithms::{dijkstra::Dijkstra, Solver};
 
 mod algorithms;
 mod maze;

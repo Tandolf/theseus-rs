@@ -6,3 +6,16 @@ labyrinth with the aid of Ariadne, the daughter of Minos.__
 This is a small program that maps up labyrinths and then attempts to solve them using different algorithms.
 
 ![Solved maze](images/maze_solution.png)
+
+### Tasks
+[ ] Select algorithm from cmd
+[ ] Select maze from cmd
+[ ] Spinner when loading maze
+[ ] Spinner when solving maze
+[ ] Print pretty statistics
+[ ] Implement A*
+[ ] Implement Breadth first
+[ ] Implement Depth first
+[ ] Select output filename
+[ ] Implement threaded loading of maze
+

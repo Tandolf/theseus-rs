@@ -3,7 +3,7 @@ use std::collections::VecDeque;
 use crate::maze::Maze;
 use crate::node::Node;
 
-pub mod djikstra;
+pub mod dijkstra;
 pub mod left_turn;
 
 pub trait Solver {
