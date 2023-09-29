@@ -8,23 +8,23 @@ This is a small program that maps up labyrinths and then attempts to solve them 
 ![Solved maze](images/maze_solution.png)
 
 ### Tasks
-[ ] Select algorithm from cmd
+- [ ] Select algorithm from cmd
 
-[ ] Select maze from cmd
+- [ ] Select maze from cmd
 
-[ ] Spinner when loading maze
+- [ ] Spinner when loading maze
 
-[ ] Spinner when solving maze
+- [ ] Spinner when solving maze
 
-[ ] Print pretty statistics
+- [ ] Print pretty statistics
 
-[ ] Implement A*
+- [ ] Implement A*
 
-[ ] Implement Breadth first
+- [ ] Implement Breadth first
 
-[ ] Implement Depth first
+- [ ] Implement Depth first
 
-[ ] Select output filename
+- [ ] Select output filename
 
-[ ] Implement threaded loading of maze
+- [ ] Implement threaded loading of maze
 
