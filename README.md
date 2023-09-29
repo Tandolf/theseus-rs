@@ -13,12 +13,15 @@ This is a small program that maps up labyrinths and then attempts to solve them 
 [ ] Select maze from cmd
 
 [ ] Spinner when loading maze
+
 [ ] Spinner when solving maze
 
 [ ] Print pretty statistics
+
 [ ] Implement A*
 
 [ ] Implement Breadth first
+
 [ ] Implement Depth first
 
 [ ] Select output filename
