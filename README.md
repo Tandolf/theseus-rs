@@ -51,3 +51,4 @@ This is a small program that maps up labyrinths and then attempts to solve them 
 - [ ] Implement Depth first
 - [x] Select output filename
 - [ ] Implement threaded loading of maze
+- [ ] add graphs from mermaid explaining the mapping
