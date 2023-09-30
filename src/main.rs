@@ -1,128 +1,107 @@
-use std::{env, time::Instant};
+use std::{time::Instant, process::exit, path::{PathBuf, Path}};
+use spinners::{Spinner, Spinners};
 
-use image::{open, Rgb, RgbImage};
+use clap::Parser;
 use maze::Maze;
-use node::Point;
 
-use crate::algorithms::{dijkstra::Dijkstra, Solver};
+use crate::{algorithms::{Solver, a_star::AStar, dijkstra::Dijkstra, left_turn::LeftTurn}, img::Image};
 
 mod algorithms;
 mod maze;
 mod node;
+mod img;
 mod utils;
 
-// const TINY: &str = "mazes/tiny5x5.bmp";
-// const MEDIUM: &str = "mazes/maze7x7_1.bmp";
-// const LARGE: &str = "mazes/maze13x13_1.bmp";
-// const INSANE: &str = "mazes/maze99x99_1.bmp";
-// const INSANE_10K: &str = "mazes/perfect10k.png";
-const INSANE_15K: &str = "mazes/perfect15k.png";
+const OUTPUT_FILENAME: &str = "./solution.png";
+const LONG_DESC: &str = "
+
+┌┬┐┬ ┬┌─┐┌─┐┬ ┬┌─┐   ┬─┐┌─┐
+ │ ├─┤├┤ └─┐│ │└─┐───├┬┘└─┐
+ ┴ ┴ ┴└─┘└─┘└─┘└─┘   ┴└─└─┘
+
+A small program that uses different algorithms to solve mazes.
+
+Mazes need to be provided as raw uncompressed images with exactly one entrance at the top and one exit
+at the bottom. The entire image needs to be surrounded by black borders and each wall and each path
+needs to be exactly one pixel wide each.
+
+there is currently no limit to how big a maze can be, but be wary of memory consumption, you have
+been warned.";
+
+#[derive(Parser)]
+#[command(
+    author, 
+    version, 
+    about = "Thesus-rs\n---------\nA small program that tries to solve mazes", 
+    long_about = LONG_DESC,
+)]
+struct Cli {
+    filename: Option<PathBuf>,
+
+    #[arg(short, long, help = "Set output image filename")]
+    output: Option<PathBuf>,
+
+    #[arg(short, long, help = "Solve with Dijkstras algorithm")]
+    dijkstra: bool,
+
+    #[arg(short, long, help = "Solve with A* algorithm")]
+    a_star: bool,
+
+    #[arg(short, long, help = "Solve with always taking a left turn")]
+    left_turn: bool,
+}
 
 fn main() {
-    env::set_var("RUST_BACKTRACE", "1");
-    let start = Instant::now();
-    let mut image: RgbImage = open(INSANE_15K).unwrap().into_rgb8();
 
+    let cli = Cli::parse();
+
+    let filename = if let Some(filename) = cli.filename.as_deref() {
+        filename
+    } else {
+        println!("No filename was provided");
+        exit(1);
+    };
+
+    let mut spinner = Spinner::new(Spinners::Dots9, format!("loading image: {}", filename.display()));
+    let start = Instant::now();
+    let mut image = Image::open(filename);
+    spinner.stop_with_newline();
+    let mut spinner = Spinner::new(Spinners::Dots9, "analyzing maze".into());
     let maze = Maze::from_image(&image);
     let load_duration = start.elapsed();
+    spinner.stop_with_newline();
     let maze = maze.unwrap();
-     
-    println!("Loading maze: {INSANE_15K} took: {:?}", load_duration);
-    println!("Number of nodes loaded: {}", maze.data.len());
+    println!("loading maze: {} took: {:?}",filename.display(), load_duration);
+    println!("number of nodes loaded: {}", maze.data.len());
 
     let solution_time = Instant::now();
-    // let mut solution = LeftTurn::solve(&maze).unwrap();
-    let mut solution = Dijkstra::solve(&maze).unwrap();
+
+    let mut spinner = Spinner::new(Spinners::Dots9, "lets solve this bad boy...".into());
+    let result = if cli.dijkstra {
+        Dijkstra::solve(&maze)
+    } else if cli.a_star {
+        AStar::solve(&maze)
+    } else if cli.left_turn {
+        LeftTurn::solve(&maze)
+    } else {
+        println!("No algorithm was provided");
+        exit(1);
+    };
+    spinner.stop_with_newline();
+
+    println!("Maze solved!");
     let solution_time = solution_time.elapsed();
+    println!("finding the solution took: {:?}", solution_time);
 
-    println!("Solving took: {INSANE_15K} took: {:?}", solution_time);
-    println!("Number of decisions: {:?}", solution.count);
+    let mut solution = result.unwrap();
+    println!("number of decisions: {:?}", solution.count);
 
-    let mut last = solution.path.pop_front().unwrap();
-    for n in solution.path {
-        let line = line(&last.point, &n.point);
-        for point in line {
-            image.put_pixel(point.x, point.y, Rgb([255, 0, 0]));
-        }
-        last = n;
-    }
+    image.apply_solution(&mut solution);
 
-    image.save("solution.png").unwrap();
-}
-
-fn line(p1: &Point, p2: &Point) -> Vec<Point> {
-    let mut line = Vec::new();
-
-    let mut current = *p1;
-    line.push(*p1);
-    loop {
-        if current == *p2 {
-            break;
-        }
-        match p1.x.cmp(&p2.x) {
-            std::cmp::Ordering::Less => {
-                let n = Point::at(current.x + 1, current.y);
-                line.push(n);
-                current = n;
-                continue;
-            }
-            std::cmp::Ordering::Equal if p1.y < p2.y => {
-                let n = Point::at(current.x, current.y + 1);
-                line.push(n);
-                current = n;
-                continue;
-            }
-            std::cmp::Ordering::Equal if p1.y > p2.y => {
-                let n = Point::at(current.x, current.y - 1);
-                line.push(n);
-                current = n;
-                continue;
-            }
-            std::cmp::Ordering::Equal => {}
-            std::cmp::Ordering::Greater => {
-                let n = Point::at(current.x - 1, current.y);
-                line.push(n);
-                current = n;
-                continue;
-            }
-        }
-    }
-    line
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-
-    #[test]
-    pub fn east_line() {
-        assert_eq!(
-            line(&Point::at(0, 1), &Point::at(0, 3)),
-            vec![Point::at(0, 1), Point::at(0, 2), Point::at(0, 3)],
-        )
-    }
-
-    #[test]
-    pub fn west_line() {
-        assert_eq!(
-            line(&Point::at(0, 3), &Point::at(0, 1)),
-            vec![Point::at(0, 3), Point::at(0, 2), Point::at(0, 1)],
-        )
-    }
-
-    #[test]
-    pub fn south_line() {
-        assert_eq!(
-            line(&Point::at(1, 0), &Point::at(3, 0)),
-            vec![Point::at(1, 0), Point::at(2, 0), Point::at(3, 0)],
-        )
-    }
-
-    #[test]
-    pub fn north_line() {
-        assert_eq!(
-            line(&Point::at(3, 0), &Point::at(1, 0)),
-            vec![Point::at(3, 0), Point::at(2, 0), Point::at(1, 0)],
-        )
+    if let Some(output) = cli.output.as_deref() {
+        image.save(output).unwrap();
+    } else {
+        image.save(Path::new(OUTPUT_FILENAME)).unwrap();
     }
 }
+

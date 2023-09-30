@@ -2,6 +2,7 @@ use fxhash::FxHashMap;
 use image::{Pixel, RgbImage};
 use std::{io::Error, iter};
 
+use crate::img::Image;
 use crate::node::{Direction, Node, NodeType, Point};
 use crate::utils::{look_ahead, path_above, path_below, wall_above, wall_below};
 
@@ -57,7 +58,8 @@ fn get_exit<'a>(image: &RgbImage, nodes: &'a mut Nodes, top_nodes: &'a [Option<P
 }
 
 impl Maze {
-    pub(crate) fn from_image(image: &RgbImage) -> Result<Maze, Error> {
+    pub(crate) fn from_image(image: &Image) -> Result<Maze, Error> {
+        let image = &image.image;
         let len = image.pixels().len();
         let mut nodes = FxHashMap::with_capacity_and_hasher(len / 6, Default::default());
 
@@ -207,19 +209,19 @@ mod test {
 
     macro_rules! maze_image {
         ($num:expr) => {{
-            let mut img = RgbImage::new($num[0].len() as u32, $num.len() as u32);
+            let mut image = RgbImage::new($num[0].len() as u32, $num.len() as u32);
             for (y, row) in $num.iter().enumerate() {
                 for (x, item) in row.iter().enumerate() {
                     // if path
                     if *item == 1 {
-                        img.put_pixel(x as u32, y as u32, PATH);
+                        image.put_pixel(x as u32, y as u32, PATH);
                     // if wall
                     } else {
-                        img.put_pixel(x as u32, y as u32, WALL);
+                        image.put_pixel(x as u32, y as u32, WALL);
                     }
                 }
             }
-            img
+            Image { image }
         }};
     }
     //     // first maze row

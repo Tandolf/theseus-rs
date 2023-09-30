@@ -1,4 +1,4 @@
-pub struct Dijkstra;
+pub struct AStar;
 
 use crate::node::{
     Node,
@@ -40,7 +40,7 @@ impl PartialOrd for BinNode {
     }
 }
 
-impl Solver for Dijkstra {
+impl Solver for AStar {
     fn solve(maze: &Maze) -> Option<Solution> {
 
         let mut decisions = 0;
@@ -56,6 +56,7 @@ impl Solver for Dijkstra {
         }
 
         let start = &maze.data[&Start];
+        let end = &maze.data[&Exit];
 
         let start_index = (start.point.y * width) + start.point.x;
 
@@ -66,8 +67,6 @@ impl Solver for Dijkstra {
         unvisited.push(BinNode::new(0, start.point));
 
         while let Some(BinNode { cost: _, position, is_valid }) = unvisited.pop() {
-
-            decisions += 1;
 
             if !is_valid.take() {
                 continue;
@@ -86,11 +85,13 @@ impl Solver for Dijkstra {
 
                 // If we havnt checked the current no;
                 if !visited[n_index as usize] {
+                    decisions += 1;
                     // Calculate the manhattan distance to the start node
-                    let abs_distance = get_dist(&position, next_point);
+                    let distance_from_current = get_dist(&position, next_point);
+                    let distance_from_exit = get_dist(&end.point, next_point);
 
                     // Get the current nodes current distance and add on the new distance
-                    let mut new_distance = distances[c_index as usize] + abs_distance;
+                    let mut new_distance = distances[c_index as usize] + distance_from_current;
 
                     // if this new distance is the shortest path
                     if new_distance < distances[n_index as usize] {
@@ -100,7 +101,7 @@ impl Solver for Dijkstra {
                         node.is_valid.set(false);
                         new_distance += node.cost;
                     }
-                    let node = BinNode::new(new_distance, *next_point);
+                    let node = BinNode::new(new_distance + distance_from_exit, *next_point);
                     unvisited.push(node);
                     distances[n_index as usize] = new_distance;
                 }
@@ -109,7 +110,6 @@ impl Solver for Dijkstra {
             visited[c_index as usize] = true;
         }
 
-        let end = &maze.data[&Exit];
         let mut current = Some(&end);
         let mut solution = VecDeque::new();
 
@@ -126,7 +126,11 @@ impl Solver for Dijkstra {
                 .as_ref();
         }
 
-        Some(Solution::new(decisions, solution))
+        Some(Solution {
+            count: decisions,
+            length: solution.len(),
+            path: solution,
+        })
     }
 }
 
@@ -206,7 +210,7 @@ mod test {
         ]);
 
         let maze = Maze::from_image(&img).unwrap();
-        let solution = Dijkstra::solve(&maze).unwrap();
+        let solution = AStar::solve(&maze).unwrap();
         let path = create_path(&[(1,2)], &maze);
         assert_eq!(path, solution.path)
     }
@@ -222,7 +226,7 @@ mod test {
         ]);
 
         let maze = Maze::from_image(&img).unwrap();
-        let solution = Dijkstra::solve(&maze).unwrap();
+        let solution = AStar::solve(&maze).unwrap();
         let path = create_path(&[(1,1), (1,3)], &maze);
         assert_eq!(path, solution.path)
     }
@@ -238,7 +242,7 @@ mod test {
         ]);
 
         let maze = Maze::from_image(&img).unwrap();
-        let solution = Dijkstra::solve(&maze).unwrap();
+        let solution = AStar::solve(&maze).unwrap();
         let path = create_path(&[(1,1), (1,3), (3, 3)], &maze);
         assert_eq!(path, solution.path)
     }
@@ -254,7 +258,7 @@ mod test {
         ]);
 
         let maze = Maze::from_image(&img).unwrap();
-        let solution = Dijkstra::solve(&maze).unwrap();
+        let solution = AStar::solve(&maze).unwrap();
         let path = create_path(&[
             (5,3), 
             (3,3), 
@@ -275,7 +279,7 @@ mod test {
         ]);
 
         let maze = Maze::from_image(&img).unwrap();
-        let solution = Dijkstra::solve(&maze).unwrap();
+        let solution = AStar::solve(&maze).unwrap();
         let path = create_path(&[
             (3,1), 
             (1,1),
@@ -296,7 +300,7 @@ mod test {
         ]);
 
         let maze = Maze::from_image(&img).unwrap();
-        let solution = Dijkstra::solve(&maze).unwrap();
+        let solution = AStar::solve(&maze).unwrap();
         let path = create_path(&[
             (3,1), 
             (5,1),
