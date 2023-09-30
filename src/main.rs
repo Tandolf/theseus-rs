@@ -28,6 +28,28 @@ needs to be exactly one pixel wide each.
 there is currently no limit to how big a maze can be, but be wary of memory consumption, you have
 been warned.";
 
+const TITLE: &str = "
+
+████████╗██╗  ██╗███████╗███████╗██╗   ██╗███████╗      ██████╗ ███████╗
+╚══██╔══╝██║  ██║██╔════╝██╔════╝██║   ██║██╔════╝      ██╔══██╗██╔════╝
+   ██║   ███████║█████╗  ███████╗██║   ██║███████╗█████╗██████╔╝███████╗
+   ██║   ██╔══██║██╔══╝  ╚════██║██║   ██║╚════██║╚════╝██╔══██╗╚════██║
+   ██║   ██║  ██║███████╗███████║╚██████╔╝███████║      ██║  ██║███████║
+   ╚═╝   ╚═╝  ╚═╝╚══════╝╚══════╝ ╚═════╝ ╚══════╝      ╚═╝  ╚═╝╚══════╝
+                                                                        
+";
+
+const SOLVED: &str = "
+
+███╗   ███╗ █████╗ ███████╗███████╗    ███████╗ ██████╗ ██╗    ██╗   ██╗███████╗██████╗ 
+████╗ ████║██╔══██╗╚══███╔╝██╔════╝    ██╔════╝██╔═══██╗██║    ██║   ██║██╔════╝██╔══██╗
+██╔████╔██║███████║  ███╔╝ █████╗      ███████╗██║   ██║██║    ██║   ██║█████╗  ██║  ██║
+██║╚██╔╝██║██╔══██║ ███╔╝  ██╔══╝      ╚════██║██║   ██║██║    ╚██╗ ██╔╝██╔══╝  ██║  ██║
+██║ ╚═╝ ██║██║  ██║███████╗███████╗    ███████║╚██████╔╝███████╗╚████╔╝ ███████╗██████╔╝
+╚═╝     ╚═╝╚═╝  ╚═╝╚══════╝╚══════╝    ╚══════╝ ╚═════╝ ╚══════╝ ╚═══╝  ╚══════╝╚═════╝ 
+                                                                                    
+";
+
 #[derive(Parser)]
 #[command(
     author, 
@@ -62,6 +84,7 @@ fn main() {
         exit(1);
     };
 
+    println!("{TITLE}");
     let mut spinner = Spinner::new(Spinners::Dots9, format!("loading image: {}", filename.display()));
     let start = Instant::now();
     let mut image = Image::open(filename);
@@ -89,7 +112,7 @@ fn main() {
     };
     spinner.stop_with_newline();
 
-    println!("Maze solved!");
+    println!("{SOLVED}");
     let solution_time = solution_time.elapsed();
     println!("finding the solution took: {:?}", solution_time);
 
