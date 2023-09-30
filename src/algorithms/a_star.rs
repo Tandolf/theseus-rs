@@ -68,6 +68,12 @@ impl Solver for AStar {
 
         while let Some(BinNode { cost: _, position, is_valid }) = unvisited.pop() {
 
+            decisions += 1;
+
+            if position == end.point {
+                break;
+            }
+
             if !is_valid.take() {
                 continue;
             }
@@ -85,7 +91,6 @@ impl Solver for AStar {
 
                 // If we havnt checked the current no;
                 if !visited[n_index as usize] {
-                    decisions += 1;
                     // Calculate the manhattan distance to the start node
                     let distance_from_current = get_dist(&position, next_point);
                     let distance_from_exit = get_dist(&end.point, next_point);

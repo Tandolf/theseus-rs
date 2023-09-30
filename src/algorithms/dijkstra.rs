@@ -56,6 +56,7 @@ impl Solver for Dijkstra {
         }
 
         let start = &maze.data[&Start];
+        let end = &maze.data[&Exit];
 
         let start_index = (start.point.y * width) + start.point.x;
 
@@ -68,6 +69,10 @@ impl Solver for Dijkstra {
         while let Some(BinNode { cost: _, position, is_valid }) = unvisited.pop() {
 
             decisions += 1;
+
+            if position == end.point {
+                break;
+            }
 
             if !is_valid.take() {
                 continue;
@@ -109,7 +114,6 @@ impl Solver for Dijkstra {
             visited[c_index as usize] = true;
         }
 
-        let end = &maze.data[&Exit];
         let mut current = Some(&end);
         let mut solution = VecDeque::new();
 
