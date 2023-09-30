@@ -3,7 +3,9 @@
 the youths to be sacrificed, but once in the labyrinth he killed the Minotaur and managed to find his way out of the
 labyrinth with the aid of Ariadne, the daughter of Minos.__
 
-```
+```bash
+$ thesus-rs -d ./mazes/perfect10k.png -o dijkstra_solution.png
+
 ████████╗██╗  ██╗███████╗███████╗██╗   ██╗███████╗      ██████╗ ███████╗
 ╚══██╔══╝██║  ██║██╔════╝██╔════╝██║   ██║██╔════╝      ██╔══██╗██╔════╝
    ██║   ███████║█████╗  ███████╗██║   ██║███████╗█████╗██████╔╝███████╗
