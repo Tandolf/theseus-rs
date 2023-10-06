@@ -1,19 +1,17 @@
 use std::path::Path;
 
-use image::{ImageBuffer, Rgb, open};
+use image::{open, ImageBuffer, Rgb};
 
 use crate::{algorithms::Solution, node::Point};
 
 pub struct Image {
-    pub image: ImageBuffer<Rgb<u8>, Vec<u8>>
+    pub image: ImageBuffer<Rgb<u8>, Vec<u8>>,
 }
 
 impl Image {
     pub fn open(path: &Path) -> Self {
         let image = open(path).unwrap().into_rgb8();
-        Self {
-            image
-        }
+        Self { image }
     }
 
     pub fn apply_solution(&mut self, solution: &mut Solution) {
@@ -21,7 +19,7 @@ impl Image {
         for n in &solution.path {
             let line = line(&last.point, &n.point);
             for point in line {
-               self.image.put_pixel(point.x, point.y, Rgb([255, 0, 0]));
+                self.image.put_pixel(point.x, point.y, Rgb([255, 0, 0]));
             }
             last = n;
         }
@@ -32,7 +30,7 @@ impl Image {
     }
 }
 
-pub (crate) fn line(p1: &Point, p2: &Point) -> Vec<Point> {
+pub(crate) fn line(p1: &Point, p2: &Point) -> Vec<Point> {
     let mut line = Vec::new();
 
     let mut current = *p1;

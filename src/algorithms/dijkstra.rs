@@ -5,7 +5,10 @@ use crate::node::{
     NodeType::{self, Exit, Start},
     Point,
 };
-use std::{collections::{BinaryHeap, VecDeque}, cell::Cell};
+use std::{
+    cell::Cell,
+    collections::{BinaryHeap, VecDeque},
+};
 
 use crate::{
     algorithms::{Solution, Solver},
@@ -21,7 +24,11 @@ struct BinNode {
 
 impl BinNode {
     pub fn new(cost: u32, position: Point) -> Self {
-        BinNode { cost, position, is_valid: Cell::new(true)}
+        BinNode {
+            cost,
+            position,
+            is_valid: Cell::new(true),
+        }
     }
 }
 
@@ -42,7 +49,6 @@ impl PartialOrd for BinNode {
 
 impl Solver for Dijkstra {
     fn solve(maze: &Maze) -> Option<Solution> {
-
         let mut decisions = 0;
 
         let width = maze.width;
@@ -66,8 +72,12 @@ impl Solver for Dijkstra {
         let mut unvisited = BinaryHeap::new();
         unvisited.push(BinNode::new(0, start.point));
 
-        while let Some(BinNode { cost: _, position, is_valid }) = unvisited.pop() {
-
+        while let Some(BinNode {
+            cost: _,
+            position,
+            is_valid,
+        }) = unvisited.pop()
+        {
             decisions += 1;
 
             if position == end.point {
@@ -78,7 +88,8 @@ impl Solver for Dijkstra {
                 continue;
             }
 
-            let node = maze.data
+            let node = maze
+                .data
                 .get(&NodeType::Path(position))
                 .or(maze.data.get(&NodeType::Start))
                 .unwrap();
@@ -101,7 +112,10 @@ impl Solver for Dijkstra {
                     if new_distance < distances[n_index as usize] {
                         reverse_path[n_index as usize] = Some(node);
                     } else {
-                        let node = unvisited.iter().find(|n| &n.position == next_point).unwrap();
+                        let node = unvisited
+                            .iter()
+                            .find(|n| &n.position == next_point)
+                            .unwrap();
                         node.is_valid.set(false);
                         new_distance += node.cost;
                     }
@@ -124,10 +138,7 @@ impl Solver for Dijkstra {
             solution.push_back(node);
 
             let index = (node.point.y * width) + node.point.x;
-            current = reverse_path
-                .get(index as usize)
-                .unwrap()
-                .as_ref();
+            current = reverse_path.get(index as usize).unwrap().as_ref();
         }
 
         Some(Solution::new(decisions, solution))
@@ -139,14 +150,13 @@ fn get_dist(current: &Point, next: &Point) -> u32 {
 }
 
 fn get_node<'a>(node: &'a Node, maze: &'a Maze) -> Option<&'a Node> {
-    maze.data.get(&NodeType::Path(node.point))
-        .or_else(|| {
-            if node.start {
-                maze.data.get(&NodeType::Start)
-            } else {
-                maze.data.get(&NodeType::Exit)
-            }
-        })
+    maze.data.get(&NodeType::Path(node.point)).or_else(|| {
+        if node.start {
+            maze.data.get(&NodeType::Start)
+        } else {
+            maze.data.get(&NodeType::Exit)
+        }
+    })
 }
 
 #[cfg(test)]
@@ -180,14 +190,20 @@ mod test {
 
     fn create_path<'a>(coords: &'a [(u32, u32)], maze: &'a Maze) -> VecDeque<&'a Node> {
         let mut path = VecDeque::new();
-        if let Some(node) = maze.data.get(&NodeType::Start) { path.push_front(node); }
+        if let Some(node) = maze.data.get(&NodeType::Start) {
+            path.push_front(node);
+        }
 
         for coord in coords.iter() {
-            path.push_front(maze.data.get(&NodeType::Path(Point::at(coord.0, coord.1))).unwrap());
+            path.push_front(
+                maze.data
+                    .get(&NodeType::Path(Point::at(coord.0, coord.1)))
+                    .unwrap(),
+            );
         }
-            
+
         path.push_front(maze.data.get(&NodeType::Exit).unwrap());
-        path 
+        path
     }
 
     #[test]
@@ -211,7 +227,7 @@ mod test {
 
         let maze = Maze::from_image(&img).unwrap();
         let solution = Dijkstra::solve(&maze).unwrap();
-        let path = create_path(&[(1,2)], &maze);
+        let path = create_path(&[(1, 2)], &maze);
         assert_eq!(path, solution.path)
     }
 
@@ -227,7 +243,7 @@ mod test {
 
         let maze = Maze::from_image(&img).unwrap();
         let solution = Dijkstra::solve(&maze).unwrap();
-        let path = create_path(&[(1,1), (1,3)], &maze);
+        let path = create_path(&[(1, 1), (1, 3)], &maze);
         assert_eq!(path, solution.path)
     }
 
@@ -243,7 +259,7 @@ mod test {
 
         let maze = Maze::from_image(&img).unwrap();
         let solution = Dijkstra::solve(&maze).unwrap();
-        let path = create_path(&[(1,1), (1,3), (3, 3)], &maze);
+        let path = create_path(&[(1, 1), (1, 3), (3, 3)], &maze);
         assert_eq!(path, solution.path)
     }
 
@@ -259,12 +275,7 @@ mod test {
 
         let maze = Maze::from_image(&img).unwrap();
         let solution = Dijkstra::solve(&maze).unwrap();
-        let path = create_path(&[
-            (5,3), 
-            (3,3), 
-            (3,1), 
-            (1,1)
-        ], &maze);
+        let path = create_path(&[(5, 3), (3, 3), (3, 1), (1, 1)], &maze);
         assert_eq!(path, solution.path)
     }
 
@@ -280,12 +291,7 @@ mod test {
 
         let maze = Maze::from_image(&img).unwrap();
         let solution = Dijkstra::solve(&maze).unwrap();
-        let path = create_path(&[
-            (3,1), 
-            (1,1),
-            (1,3),
-            (2,3)
-        ], &maze);
+        let path = create_path(&[(3, 1), (1, 1), (1, 3), (2, 3)], &maze);
         assert_eq!(path, solution.path)
     }
 
@@ -301,12 +307,7 @@ mod test {
 
         let maze = Maze::from_image(&img).unwrap();
         let solution = Dijkstra::solve(&maze).unwrap();
-        let path = create_path(&[
-            (3,1), 
-            (5,1),
-            (5,3),
-            (4,3)
-        ], &maze);
+        let path = create_path(&[(3, 1), (5, 1), (5, 3), (4, 3)], &maze);
         assert_eq!(path, solution.path)
     }
 }

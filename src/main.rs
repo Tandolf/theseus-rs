@@ -1,15 +1,22 @@
-use std::{time::Instant, process::exit, path::{PathBuf, Path}};
 use spinners::{Spinner, Spinners};
+use std::{
+    path::{Path, PathBuf},
+    process::exit,
+    time::Instant,
+};
 
 use clap::Parser;
 use maze::Maze;
 
-use crate::{algorithms::{Solver, a_star::AStar, dijkstra::Dijkstra, left_turn::LeftTurn}, img::Image};
+use crate::{
+    algorithms::{a_star::AStar, dijkstra::Dijkstra, left_turn::LeftTurn, Solver},
+    img::Image,
+};
 
 mod algorithms;
+mod img;
 mod maze;
 mod node;
-mod img;
 mod utils;
 
 const OUTPUT_FILENAME: &str = "./solution.png";
@@ -52,8 +59,8 @@ const SOLVED: &str = "
 
 #[derive(Parser)]
 #[command(
-    author, 
-    version, 
+    author,
+    version,
     about = "Thesus-rs\n---------\nA small program that tries to solve mazes", 
     long_about = LONG_DESC,
 )]
@@ -74,7 +81,6 @@ struct Cli {
 }
 
 fn main() {
-
     let cli = Cli::parse();
 
     let filename = if let Some(filename) = cli.filename.as_deref() {
@@ -85,7 +91,11 @@ fn main() {
     };
 
     println!("{TITLE}");
-    let mut spinner = Spinner::new(Spinners::Dots9, format!("loading image: {}", filename.display()));
+
+    let mut spinner = Spinner::new(
+        Spinners::Dots9,
+        format!("loading image: {}", filename.display()),
+    );
     let start = Instant::now();
     let mut image = Image::open(filename);
     spinner.stop_with_newline();
@@ -94,7 +104,11 @@ fn main() {
     let load_duration = start.elapsed();
     spinner.stop_with_newline();
     let maze = maze.unwrap();
-    println!("loading maze: {} took: {:?}",filename.display(), load_duration);
+    println!(
+        "loading maze: {} took: {:?}",
+        filename.display(),
+        load_duration
+    );
     println!("number of nodes loaded: {}", maze.data.len());
 
     let solution_time = Instant::now();
@@ -127,4 +141,3 @@ fn main() {
         image.save(Path::new(OUTPUT_FILENAME)).unwrap();
     }
 }
-
