@@ -35,9 +35,9 @@ number of decisions: 10304076
 ```
 
 This is a small program that maps up labyrinths and then attempts to solve them using different algorithms.
-
-<img src="images/braid200_solution.png" align="center" width="200" height="200" />
-
+<p align="center">
+    <img src="images/braid200_solution.png" width="600" height="600" />
+</p>
 Example of a solved mazed using the A* algorithm.
 
 ## Algorithms
