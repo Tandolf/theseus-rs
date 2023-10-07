@@ -36,7 +36,8 @@ number of decisions: 10304076
 
 This is a small program that maps up labyrinths and then attempts to solve them using different algorithms.
 
-![Solved maze](images/perfect99_solution.png)
+<img src="images/perfect99_solution.png" align="center" width="200" height="200" />
+
 Example of a solved mazed using the A* algorithm.
 
 ## Algorithms
