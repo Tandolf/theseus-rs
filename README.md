@@ -36,12 +36,14 @@ number of decisions: 10304076
 
 This is a small program that maps up labyrinths and then attempts to solve them using different algorithms.
 
-![Solved maze](images/maze_solution.png)
+![Solved maze](images/perfect99_solution.png)
+Example of a solved mazed using the A* algorithm.
 
 ## Algorithms
 - Left Turn
 - Dijkstra
 - A-Star
+- Breadth first
 
 ### Tasks
 - [x] Select algorithm from cmd
