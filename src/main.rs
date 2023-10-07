@@ -1,3 +1,4 @@
+use algorithms::Algorithm;
 use spinners::{Spinner, Spinners};
 use std::{
     path::{Path, PathBuf},
@@ -95,16 +96,23 @@ fn main() {
         exit(1);
     };
 
+    let algorithm = get_algorithm(&cli);
+
+    if let Algorithm::None = algorithm {
+        println!("No algorithm was defined, please check the help section (--help)");
+        exit(1);
+    }
+
     println!("{TITLE}");
 
     let mut spinner = Spinner::new(
-        Spinners::Dots9,
+        Spinners::Dots12,
         format!("loading image: {}", filename.display()),
     );
     let start = Instant::now();
     let mut image = Image::open(filename);
     spinner.stop_with_newline();
-    let mut spinner = Spinner::new(Spinners::Dots9, "analyzing maze".into());
+    let mut spinner = Spinner::new(Spinners::Dots12, "analyzing maze".into());
     let maze = Maze::from_image(&image);
     let load_duration = start.elapsed();
     spinner.stop_with_newline();
@@ -118,18 +126,14 @@ fn main() {
 
     let solution_time = Instant::now();
 
-    let mut spinner = Spinner::new(Spinners::Dots9, "lets solve this bad boy...".into());
-    let result = if cli.dijkstra {
-        Dijkstra::solve(&maze)
-    } else if cli.a_star {
-        AStar::solve(&maze)
-    } else if cli.left_turn {
-        LeftTurn::solve(&maze)
-    } else if cli.breadth_first {
-        BreadthFirst::solve(&maze)
-    } else {
-        println!("No algorithm was provided");
-        exit(1);
+    println!("Solution algorithm defined: {algorithm}");
+    let mut spinner = Spinner::new(Spinners::Dots12, "lets solve this bad boy...".into());
+    let result = match algorithm {
+        Algorithm::LeftTurn => LeftTurn::solve(&maze),
+        Algorithm::Dijkstra => Dijkstra::solve(&maze),
+        Algorithm::AStar => AStar::solve(&maze),
+        Algorithm::BreadthFirst => BreadthFirst::solve(&maze),
+        _ => unreachable!(),
     };
     spinner.stop_with_newline();
 
@@ -142,9 +146,27 @@ fn main() {
 
     image.apply_solution(&mut solution);
 
+    let mut output_filename = OUTPUT_FILENAME;
     if let Some(output) = cli.output.as_deref() {
+        output_filename = output.file_name().unwrap().to_str().unwrap();
         image.save(output).unwrap();
     } else {
         image.save(Path::new(OUTPUT_FILENAME)).unwrap();
+    }
+    println!("💾Saved solution to file: {}", output_filename);
+    println!("Freeing up memory and exiting program.")
+}
+
+fn get_algorithm(cli: &Cli) -> Algorithm {
+    if cli.dijkstra {
+        Algorithm::Dijkstra
+    } else if cli.a_star {
+        Algorithm::AStar
+    } else if cli.left_turn {
+        Algorithm::LeftTurn
+    } else if cli.breadth_first {
+        Algorithm::BreadthFirst
+    } else {
+        Algorithm::None
     }
 }

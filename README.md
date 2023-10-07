@@ -58,3 +58,4 @@ Example of a solved mazed using the A* algorithm.
 - [x] Select output filename
 - [ ] Implement threaded loading of maze
 - [ ] add graphs from mermaid explaining the mapping
+- [ ] implement Drop trait on image, and maze, to gracefully print properly
