@@ -4,6 +4,7 @@ use crate::maze::Maze;
 use crate::node::Node;
 
 pub mod a_star;
+pub mod breadth_first;
 pub mod dijkstra;
 pub mod left_turn;
 

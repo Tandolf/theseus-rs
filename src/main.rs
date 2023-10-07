@@ -9,7 +9,9 @@ use clap::Parser;
 use maze::Maze;
 
 use crate::{
-    algorithms::{a_star::AStar, dijkstra::Dijkstra, left_turn::LeftTurn, Solver},
+    algorithms::{
+        a_star::AStar, breadth_first::BreadthFirst, dijkstra::Dijkstra, left_turn::LeftTurn, Solver,
+    },
     img::Image,
 };
 
@@ -78,6 +80,9 @@ struct Cli {
 
     #[arg(short, long, help = "Solve with always taking a left turn")]
     left_turn: bool,
+
+    #[arg(short, long, help = "Solve with breadth first algorithm")]
+    breadth_first: bool,
 }
 
 fn main() {
@@ -120,6 +125,8 @@ fn main() {
         AStar::solve(&maze)
     } else if cli.left_turn {
         LeftTurn::solve(&maze)
+    } else if cli.breadth_first {
+        BreadthFirst::solve(&maze)
     } else {
         println!("No algorithm was provided");
         exit(1);
