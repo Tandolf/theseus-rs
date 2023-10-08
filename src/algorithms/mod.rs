@@ -6,6 +6,7 @@ use crate::node::Node;
 
 pub mod a_star;
 pub mod breadth_first;
+pub mod depth_first;
 pub mod dijkstra;
 pub mod left_turn;
 
@@ -15,6 +16,7 @@ pub enum Algorithm {
     AStar,
     BreadthFirst,
     None,
+    DepthFirst,
 }
 
 impl Display for Algorithm {
@@ -24,6 +26,7 @@ impl Display for Algorithm {
             Algorithm::Dijkstra => "Dijkstra 👴",
             Algorithm::AStar => "A🌟",
             Algorithm::BreadthFirst => "Breadth First 🍞",
+            Algorithm::DepthFirst => "Depth First",
             _ => unimplemented!(),
         };
         write!(f, "{}", algorithm)

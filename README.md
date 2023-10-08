@@ -45,6 +45,7 @@ Example of a solved mazed using the A* algorithm.
 - Dijkstra
 - A-Star
 - Breadth first
+- Deapth first
 
 ### Tasks
 - [x] Select algorithm from cmd
@@ -54,8 +55,9 @@ Example of a solved mazed using the A* algorithm.
 - [ ] Print pretty statistics
 - [x] Implement A*
 - [x] Implement Breadth first
-- [ ] Implement Depth first
+- [x] Implement Depth first
 - [x] Select output filename
 - [ ] Implement threaded loading of maze
 - [ ] add graphs from mermaid explaining the mapping
 - [ ] implement Drop trait on image, and maze, to gracefully print properly
+- [ ] implement a gui that vizualises the algorithms

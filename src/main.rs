@@ -11,7 +11,8 @@ use maze::Maze;
 
 use crate::{
     algorithms::{
-        a_star::AStar, breadth_first::BreadthFirst, dijkstra::Dijkstra, left_turn::LeftTurn, Solver,
+        a_star::AStar, breadth_first::BreadthFirst, depth_first::DepthFirst, dijkstra::Dijkstra,
+        left_turn::LeftTurn, Solver,
     },
     img::Image,
 };
@@ -73,7 +74,7 @@ struct Cli {
     #[arg(short, long, help = "Set output image filename")]
     output: Option<PathBuf>,
 
-    #[arg(short, long, help = "Solve with Dijkstras algorithm")]
+    #[arg(short = 'j', long, help = "Solve with Dijkstras algorithm")]
     dijkstra: bool,
 
     #[arg(short, long, help = "Solve with A* algorithm")]
@@ -84,6 +85,9 @@ struct Cli {
 
     #[arg(short, long, help = "Solve with breadth first algorithm")]
     breadth_first: bool,
+
+    #[arg(short, long, help = "Solve with depth first algorithm")]
+    depth_first: bool,
 }
 
 fn main() {
@@ -133,6 +137,7 @@ fn main() {
         Algorithm::Dijkstra => Dijkstra::solve(&maze),
         Algorithm::AStar => AStar::solve(&maze),
         Algorithm::BreadthFirst => BreadthFirst::solve(&maze),
+        Algorithm::DepthFirst => DepthFirst::solve(&maze),
         _ => unreachable!(),
     };
     spinner.stop_with_newline();
@@ -166,6 +171,8 @@ fn get_algorithm(cli: &Cli) -> Algorithm {
         Algorithm::LeftTurn
     } else if cli.breadth_first {
         Algorithm::BreadthFirst
+    } else if cli.depth_first {
+        Algorithm::DepthFirst
     } else {
         Algorithm::None
     }
