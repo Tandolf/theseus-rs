@@ -45,7 +45,7 @@ Example of a solved mazed using the A* algorithm.
 - Dijkstra
 - A-Star
 - Breadth first
-- Deapth first
+- Depth first
 
 ### Tasks
 - [x] Select algorithm from cmd
