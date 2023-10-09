@@ -1,10 +1,10 @@
 use super::{Solution, Solver};
 use crate::{
-    maze::Maze,
     node::{
         Node,
         NodeType::{self, Exit, Start},
     },
+    utils::get_node,
 };
 use std::collections::VecDeque;
 
@@ -65,14 +65,4 @@ impl Solver for DepthFirst {
 
         Some(Solution::new(decisions, solution))
     }
-}
-
-fn get_node<'a>(node: &'a Node, maze: &'a Maze) -> Option<&'a Node> {
-    maze.data.get(&NodeType::Path(node.point)).or_else(|| {
-        if node.start {
-            maze.data.get(&NodeType::Start)
-        } else {
-            maze.data.get(&NodeType::Exit)
-        }
-    })
 }

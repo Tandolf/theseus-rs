@@ -15,6 +15,7 @@ use crate::{
         left_turn::LeftTurn, Solver,
     },
     img::Image,
+    utils::get_algorithm,
 };
 
 mod algorithms;
@@ -68,7 +69,7 @@ const SOLVED: &str = "
     about = "Theseus-rs\n---------\nA small program that tries to solve mazes", 
     long_about = LONG_DESC,
 )]
-struct Cli {
+pub struct Cli {
     filename: Option<PathBuf>,
 
     #[arg(short, long, help = "Set output image filename")]
@@ -160,20 +161,4 @@ fn main() {
     }
     println!("💾Saved solution to file: {}", output_filename);
     println!("Freeing up memory and exiting program.")
-}
-
-fn get_algorithm(cli: &Cli) -> Algorithm {
-    if cli.dijkstra {
-        Algorithm::Dijkstra
-    } else if cli.a_star {
-        Algorithm::AStar
-    } else if cli.left_turn {
-        Algorithm::LeftTurn
-    } else if cli.breadth_first {
-        Algorithm::BreadthFirst
-    } else if cli.depth_first {
-        Algorithm::DepthFirst
-    } else {
-        Algorithm::None
-    }
 }

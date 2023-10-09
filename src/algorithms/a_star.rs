@@ -1,9 +1,12 @@
 pub struct AStar;
 
-use crate::node::{
-    Node,
-    NodeType::{self, Exit, Start},
-    Point,
+use crate::{
+    node::{
+        Node,
+        NodeType::{self, Exit, Start},
+        Point,
+    },
+    utils::{get_dist, get_node},
 };
 use std::{
     cell::Cell,
@@ -150,24 +153,11 @@ impl Solver for AStar {
     }
 }
 
-fn get_dist(current: &Point, next: &Point) -> u32 {
-    ((next.y as i32 - current.y as i32).abs() + (next.x as i32 - current.x as i32).abs()) as u32
-}
-
-fn get_node<'a>(node: &'a Node, maze: &'a Maze) -> Option<&'a Node> {
-    maze.data.get(&NodeType::Path(node.point)).or_else(|| {
-        if node.start {
-            maze.data.get(&NodeType::Start)
-        } else {
-            maze.data.get(&NodeType::Exit)
-        }
-    })
-}
-
 #[cfg(test)]
 mod test {
 
     use super::*;
+    use crate::Image;
     use image::Rgb;
     use image::RgbImage;
     use pretty_assertions::assert_eq;
@@ -189,7 +179,7 @@ mod test {
                     }
                 }
             }
-            img
+            Image { image: img }
         }};
     }
 
