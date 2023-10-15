@@ -15,6 +15,7 @@ use crate::{
         left_turn::LeftTurn, Solver,
     },
     img::Image,
+    statistics::Statistics,
     utils::get_algorithm,
 };
 
@@ -22,6 +23,7 @@ mod algorithms;
 mod img;
 mod maze;
 mod node;
+mod statistics;
 mod utils;
 
 const OUTPUT_FILENAME: &str = "./solution.png";
@@ -89,12 +91,18 @@ pub struct Cli {
 
     #[arg(short, long, help = "Solve with depth first algorithm")]
     depth_first: bool,
+
+    #[arg(short = 's', long = "stats", help = "Print statistics")]
+    statistics: bool,
 }
 
 fn main() {
     let cli = Cli::parse();
 
+    let mut statistics = Statistics::default();
+
     let filename = if let Some(filename) = cli.filename.as_deref() {
+        statistics.general.filename = filename.to_str().unwrap();
         filename
     } else {
         println!("No filename was provided");
@@ -118,7 +126,7 @@ fn main() {
     let mut image = Image::open(filename);
     spinner.stop_with_newline();
     let mut spinner = Spinner::new(Spinners::Dots12, "analyzing maze".into());
-    let maze = Maze::from_image(&image);
+    let maze = Maze::from_image(&image, &mut statistics);
     let load_duration = start.elapsed();
     spinner.stop_with_newline();
     let maze = maze.unwrap();
@@ -128,6 +136,7 @@ fn main() {
         load_duration
     );
     println!("number of nodes loaded: {}", maze.data.len());
+    statistics.img.load_duration = load_duration;
 
     let solution_time = Instant::now();
 
@@ -146,9 +155,11 @@ fn main() {
     println!("{SOLVED}");
     let solution_time = solution_time.elapsed();
     println!("finding the solution took: {:?}", solution_time);
+    statistics.alg.solution_time = solution_time;
 
     let mut solution = result.unwrap();
     println!("number of decisions: {:?}", solution.count);
+    statistics.alg.decisions = solution.count;
 
     image.apply_solution(&mut solution);
 
@@ -160,5 +171,14 @@ fn main() {
         image.save(Path::new(OUTPUT_FILENAME)).unwrap();
     }
     println!("💾Saved solution to file: {}", output_filename);
+
+    statistics.alg.algorithm = algorithm;
+    statistics.alg.solution_length = solution.length as u32;
+    statistics.general.time_total = solution_time + load_duration;
+
+    if cli.statistics {
+        println!("{:#?}", statistics);
+    }
+
     println!("Freeing up memory and exiting program.")
 }

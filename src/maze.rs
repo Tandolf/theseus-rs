@@ -4,6 +4,7 @@ use std::{io::Error, iter};
 
 use crate::img::Image;
 use crate::node::{Direction, Node, NodeType, Point};
+use crate::statistics::Statistics;
 use crate::utils::{look_ahead, path_above, path_below, wall_above, wall_below};
 
 #[derive(Debug)]
@@ -58,7 +59,7 @@ fn get_exit<'a>(image: &RgbImage, nodes: &'a mut Nodes, top_nodes: &'a [Option<P
 }
 
 impl Maze {
-    pub(crate) fn from_image(image: &Image) -> Result<Maze, Error> {
+    pub(crate) fn from_image(image: &Image, statistics: &mut Statistics) -> Result<Maze, Error> {
         let image = &image.image;
         let len = image.pixels().len();
         let mut nodes = FxHashMap::with_capacity_and_hasher(len / 6, Default::default());
@@ -142,6 +143,7 @@ impl Maze {
                         // WALL PATH WALL
                         // Only create if in a dead end
                         if wall_above(x, y, image) || wall_below(x, y, image) {
+                            statistics.maze.dead_ends += 1;
                             let node = Node::at(x, y);
                             nodes.insert(NodeType::Path(node.point), node);
                             n = Some(Point::at(x, y));
@@ -189,6 +191,11 @@ impl Maze {
         if height > 1 {
             get_exit(image, &mut nodes, &top_nodes);
         }
+
+        statistics.img.height = image.height();
+        statistics.img.width = image.width();
+        statistics.img.total = image.width() * image.height();
+        statistics.maze.total_nodes = nodes.len() as u32;
 
         Ok(Maze {
             width: image.width(),

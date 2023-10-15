@@ -52,7 +52,7 @@ Example of a solved mazed using the A* algorithm.
 - [x] Select maze from cmd
 - [x] Spinner when loading maze
 - [x] Spinner when solving maze
-- [ ] Print pretty statistics
+- [x] Print pretty statistics
 - [x] Implement A*
 - [x] Implement Breadth first
 - [x] Implement Depth first
@@ -61,3 +61,6 @@ Example of a solved mazed using the A* algorithm.
 - [ ] add graphs from mermaid explaining the mapping
 - [ ] implement Drop trait on image, and maze, to gracefully print properly
 - [ ] implement a gui that vizualises the algorithms
+- [ ] refactor maze static function to a maze analyzer
+- [ ] clean up main function
+- [ ] implement bogus algorithm (randomize solutions)

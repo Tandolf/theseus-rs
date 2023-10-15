@@ -10,13 +10,15 @@ pub mod depth_first;
 pub mod dijkstra;
 pub mod left_turn;
 
+#[derive(Debug, Default)]
 pub enum Algorithm {
     LeftTurn,
     Dijkstra,
     AStar,
     BreadthFirst,
-    None,
     DepthFirst,
+    #[default]
+    None,
 }
 
 impl Display for Algorithm {
