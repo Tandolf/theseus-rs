@@ -1,5 +1,7 @@
 use fxhash::FxHashMap;
 use image::{Pixel, RgbImage};
+use std::collections::HashMap;
+use std::hash::BuildHasherDefault;
 use std::{io::Error, iter};
 
 use crate::img::Image;
@@ -62,7 +64,8 @@ impl Maze {
     pub(crate) fn from_image(image: &Image, statistics: &mut Statistics) -> Result<Maze, Error> {
         let image = &image.image;
         let len = image.pixels().len();
-        let mut nodes = FxHashMap::with_capacity_and_hasher(len / 6, Default::default());
+        // let mut nodes = FxHashMap::with_capacity_and_hasher(len / 6, Default::default());
+        let mut nodes = HashMap::with_capacity_and_hasher(len / 6, BuildHasherDefault::default());
 
         let width = &image.width() - 1;
         let mut top_nodes: Vec<Option<Point>> =

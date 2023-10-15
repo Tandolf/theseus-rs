@@ -1,4 +1,5 @@
-use std::{collections::HashMap, ops};
+use core::hash::Hash;
+use std::{collections::HashMap, hash::Hasher, ops};
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub struct Node {
@@ -37,7 +38,7 @@ impl Node {
     }
 }
 
-#[derive(Debug, Default, Hash, Eq, PartialEq, Copy, Clone, PartialOrd, Ord)]
+#[derive(Debug, Default, Eq, PartialEq, Copy, Clone, PartialOrd, Ord)]
 pub struct Point {
     pub x: u32,
     pub y: u32,
@@ -48,6 +49,16 @@ impl Point {
         Self { x, y }
     }
 }
+
+impl Hash for Point {
+    fn hash<H: Hasher>(&self, hasher: &mut H) {
+        let high: u64 = (self.x as u64) << 32;
+        let cord: u64 = high | self.y as u64;
+        hasher.write_u64(cord)
+    }
+}
+
+impl identity_hash::IdentityHashable for Point {}
 
 #[derive(Debug, Hash, Eq, PartialEq, Copy, Clone)]
 pub enum Direction {

@@ -6,6 +6,7 @@ edition = "2021"
 [dependencies]
 clap = { version = "4.4.6", features = ["derive"] }
 fxhash = "0.2.1"
+identity-hash = "0.1.0"
 image = "0.24.6"
 pretty_assertions = "1.4.0"
 spinners = "4.1.0"
