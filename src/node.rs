@@ -144,9 +144,22 @@ impl ops::Sub<u32> for Direction {
     }
 }
 
-#[derive(Debug, Hash, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq)]
 pub enum NodeType {
     Start,
     Path(Point),
     Exit,
+}
+
+impl Hash for NodeType {
+    fn hash<H: Hasher>(&self, hasher: &mut H) {
+        match self {
+            NodeType::Start => hasher.write_u128(1),
+            NodeType::Path(p) => {
+                p.hash(hasher);
+                hasher.write_u128(2);
+            }
+            NodeType::Exit => hasher.write_u128(3),
+        }
+    }
 }
