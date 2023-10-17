@@ -22,7 +22,7 @@ pub const PATHWAY: [u8; 3] = [255, 255, 255];
 // X = columns
 // y = rows
 
-fn get_entrance(image: &RgbImage, nodes: &mut Nodes, top_nodes: &mut [Option<Point>]) {
+fn get_entrance<'a>(image: &RgbImage, nodes: &'a mut Nodes, top_nodes: &'a mut [Option<Point>]) {
     for (x, y, pixel) in image.enumerate_pixels() {
         if let [255, 255, 255] = pixel.channels() {
             let node = Node::start(x, y);
